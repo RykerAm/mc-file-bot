@@ -10,10 +10,10 @@ app = Flask('')
 
 @app.route('/')
 def home():
-    return "Bot is Online!"
+    return "Bot is Online and Running!"
 
 def run():
-    # Render က ပေးတဲ့ Port ကို သုံးမယ်၊ မရှိရင် 8080 ကို သုံးမယ်
+    # Render ရဲ့ Dynamic Port ကို ဖမ်းယူခြင်း
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
 
@@ -22,8 +22,8 @@ def keep_alive():
     t.start()
 
 # --- 2. Bot Settings ---
-TOKEN = '8512047741:AAGpAQ66GKS8V_8eXBQ9g7U__UYUXUZGpaw'
-CHANNEL_ID = '@MinecraftMyanmarMCM' # သင့် Channel ID
+TOKEN = '8512047741:AAGpAQ6GGKS8V_8eXBQ9g7U__UYUXUZGpbw'
+CHANNEL_ID = '@MinecraftMyanmarMCM'
 
 # --- 3. Bot Logic ---
 
@@ -40,16 +40,16 @@ async def is_user_joined(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     joined = await is_user_joined(update, context)
     if not joined:
-        keyboard = [[InlineKeyboardButton("Join ရန်နှိပ်ပါ", url=f"https://t.me/{CHANNEL_ID.replace('@', '')}")]]
+        keyboard = [[InlineKeyboardButton("Join Channel", url=f"https://t.me/{CHANNEL_ID.replace('@', '')}")]]
         reply_markup = InlineKeyboardMarkup(keyboard)
         await update.message.reply_text(
-            "⚠️ Channel အရင် Join ပြီးမှ Bot ကိုအသုံးပြုလို့ရမှာပါဗျ။\n\n(Join ပြီးပါက /start ကိုပြန်နှိပ်ပေးပါ)",
+            "⚠️ Bot ကိုအသုံးပြုရန် Channel ကို အရင် Join ပေးပါဗျ။\n\nJoin ပြီးပါက /start ကို ပြန်နှိပ်ပါ။",
             reply_markup=reply_markup
         )
         return
 
     await update.message.reply_text(
-        "👋 Welcome ပါဗျ။\nBot ကိုစတင်အသုံးပြုနိုင်ပါပြီ။\n\n📜 ဖိုင်များစာရင်းကြည့်ရန် /list\n📖 အသုံးပြုနည်းကြည့်ရန် /tutorial"
+        "👋 Welcome! Minecraft Myanmar File Bot မှ ကြိုဆိုပါတယ်။\n\n📜 ဖိုင်စာရင်းကြည့်ရန် - /list\n📖 အသုံးပြုနည်းကြည့်ရန် - /tutorial"
     )
 
 # /list command
@@ -72,14 +72,14 @@ async def list_files(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def tutorial(update: Update, context: ContextTypes.DEFAULT_TYPE):
     guide_text = (
         "📖 Bot အသုံးပြုနည်း Tutorial\n\n"
-        "• /list ကိုနှိပ်ပြီး ဖိုင်စာရင်းကြည့်ပါ။\n"
-        "• ဖိုင်အမည်ကို Copy ကူးပြီး Bot ထံစာရိုက်ပို့ပါ။\n"
-        "• Bot မှ ဖိုင်ကို အလိုအလျောက် ပို့ပေးပါလိမ့်မည်။\n\n"
+        "• /list ထဲက မိမိလိုချင်တဲ့ ဖိုင်အမည်ကို Copy ယူပါ။\n"
+        "• ၎င်းအမည်ကို Bot ထံ စာရိုက်ပို့လိုက်ပါ။\n"
+        "• Bot မှ သက်ဆိုင်ရာ File ကို အလိုအလျောက် ပို့ပေးပါလိမ့်မယ်။\n\n"
         "👤 Owner: @amcrafter_bot"
     )
     await update.message.reply_text(guide_text)
 
-# Message handler (စာရိုက်ပို့ရင် ဖိုင်ပြန်ပို့ပေးဖို့)
+# စာရိုက်ပို့လျှင် File ပြန်ပို့ပေးမည့်စနစ်
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     joined = await is_user_joined(update, context)
     if not joined:
@@ -88,31 +88,31 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text = update.message.text.strip()
     
-    # --- File Database (ဒီနေရာမှာ သင့်ရဲ့ File ID တွေကို ထည့်ပါ) ---
+    # --- File Database (ဒီနေရာမှာ သင့် File ID တွေ ထည့်ပါ) ---
     file_database = {
-        "Actions and Stuff 1.10": "YOUR_FILE_ID_HERE",
-        "Item Physics & More": "YOUR_FILE_ID_HERE",
-        "MM Standard UI V1": "YOUR_FILE_ID_HERE"
+        "Actions and Stuff 1.10": "FILE_ID_HERE",
+        "Item Physics & More": "FILE_ID_HERE",
+        "MM Standard UI V1": "FILE_ID_HERE"
     }
 
     if text in file_database:
         file_id = file_database[text]
-        if file_id == "YOUR_FILE_ID_HERE":
-            await update.message.reply_text("❌ ဒီဖိုင်အတွက် ID မထည့်ရသေးပါဘူးဗျာ။")
+        if file_id == "FILE_ID_HERE":
+            await update.message.reply_text("❌ ဒီဖိုင်အတွက် ID မထည့်ရသေးပါဘူး။")
         else:
             try:
                 await update.message.reply_document(document=file_id)
             except Exception as e:
                 await update.message.reply_text(f"❌ Error: {str(e)}")
     else:
-        await update.message.reply_text("❓ မရှိသောဖိုင်အမည်ဖြစ်နေပါသည်။ /list ကိုနှိပ်ပြီး အမည်ကို ပြန်စစ်ပေးပါ။")
+        await update.message.reply_text("❓ မရှိသောဖိုင်အမည် ဖြစ်နေပါတယ်။ /list ထဲကအတိုင်း တိကျစွာ ရေးပေးပါ။")
 
 # --- 4. Main Program ---
 def main():
-    # Render အတွက် Web Server ကို background thread နဲ့ run မယ်
+    # Render အတွက် Web Server ကို Background မှာ အရင်ဖွင့်ထားမယ်
     keep_alive()
 
-    # Telegram Bot ကို စတင်မယ်
+    # Telegram Bot ကို Setup လုပ်မယ်
     application = Application.builder().token(TOKEN).build()
 
     application.add_handler(CommandHandler("start", start))

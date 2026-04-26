@@ -1,24 +1,33 @@
 import logging
 import os
-import http.server
-import socketserver
-import threading
+from threading import Thread
+from flask import Flask
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
-# --- Settings ---
+# --- 1. Flask Web Server (Render Port Error ကျော်ရန်) ---
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "Bot is Online!"
+
+def run():
+    # Render က ပေးတဲ့ Port ကို သုံးမယ်၊ မရှိရင် 8080 ကို သုံးမယ်
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
+
+def keep_alive():
+    t = Thread(target=run)
+    t.start()
+
+# --- 2. Bot Settings ---
 TOKEN = '8512047741:AAGpAQ66GKS8V_8eXBQ9g7U__UYUXUZGpaw'
-CHANNEL_ID = '@MinecraftMyanmarMCM'
+CHANNEL_ID = '@MinecraftMyanmarMCM' # သင့် Channel ID
 
-# Render အတွက် Port Error မတက်အောင် Web Server အသေးစားလေး လုပ်ပေးခြင်း
-def run_web_server():
-    port = int(os.environ.get("PORT", 8000))
-    handler = http.server.SimpleHTTPRequestHandler
-    # အောက်က စာကြောင်းက Render ကို ငါတို့ Bot အသက်ရှင်နေပါတယ်လို့ အချက်ပြတာပါ
-    with socketserver.TCPServer(("", port), handler) as httpd:
-        print(f"Serving at port {port}")
-        httpd.serve_forever()
+# --- 3. Bot Logic ---
 
+# Channel Join မ Join စစ်ဆေးခြင်း
 async def is_user_joined(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     try:
@@ -27,21 +36,23 @@ async def is_user_joined(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception:
         return False
 
+# /start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     joined = await is_user_joined(update, context)
     if not joined:
         keyboard = [[InlineKeyboardButton("Join ရန်နှိပ်ပါ", url=f"https://t.me/{CHANNEL_ID.replace('@', '')}")]]
         reply_markup = InlineKeyboardMarkup(keyboard)
         await update.message.reply_text(
-            "Channel အရင် Join ပြီးမှ Bot ကိုအသုံးပြုလို့ရမှာပါဗျ။\n\n(Join ပြီးပါက /start ကိုပြန်နှိပ်ပေးပါ)",
+            "⚠️ Channel အရင် Join ပြီးမှ Bot ကိုအသုံးပြုလို့ရမှာပါဗျ။\n\n(Join ပြီးပါက /start ကိုပြန်နှိပ်ပေးပါ)",
             reply_markup=reply_markup
         )
         return
 
     await update.message.reply_text(
-        "Welcome ပါဗျ။\nBot ကိုစတင်အသုံးပြုနိုင်ပါပြီ။\n\n📜 ရရှိနိုင်သော File များစာရင်းကိုကြည့်ရန် /list ကိုနှိပ်ပါ။\n📖 Bot အသုံးပြုနည်းကြည့်ရန် /tutorial ကိုနှိပ်ပါ။"
+        "👋 Welcome ပါဗျ။\nBot ကိုစတင်အသုံးပြုနိုင်ပါပြီ။\n\n📜 ဖိုင်များစာရင်းကြည့်ရန် /list\n📖 အသုံးပြုနည်းကြည့်ရန် /tutorial"
     )
 
+# /list command
 async def list_files(update: Update, context: ContextTypes.DEFAULT_TYPE):
     joined = await is_user_joined(update, context)
     if not joined:
@@ -49,23 +60,26 @@ async def list_files(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     
     file_list = (
-        "ရရှိနိုင်သော File များစာရင်း -\n\n"
+        "📜 ရရှိနိုင်သော File များစာရင်း -\n\n"
         "1. Actions and Stuff 1.10\n"
         "2. Item Physics & More\n"
         "3. MM Standard UI V1\n\n"
-        "File ရယူရန် အပေါ်က အမည်အတိုင်း တိကျစွာ ရိုက်ပို့ပေးပါ။"
+        "💡 File ရယူရန် အပေါ်က အမည်အတိုင်း တိကျစွာ ရိုက်ပို့ပေးပါ။"
     )
     await update.message.reply_text(file_list)
 
+# /tutorial command
 async def tutorial(update: Update, context: ContextTypes.DEFAULT_TYPE):
     guide_text = (
-        "Advance File Bot အသုံးပြုနည်း Tutorial\n\n"
-        "/list ကိုနှိပ်ပြီး ရရှိနိုင်မည့် File စာရင်းများကိုကြည့်ရှုနိုင်ပါသည်။\n"
-        "File ရယူလိုပါက ရရှိနိုင်မည့် File ရဲ့ Name ကိုတိကျစွာရိုက်ပို့ပေးရပါမယ် (List ထဲမှာပါတဲ့ File အမည်အတိုင်းပဲဖြစ်ရပါမယ်)။\n"
-        "Owner နဲ့ဆက်သွယ်ရန် - @umcrafter_bot"
+        "📖 Bot အသုံးပြုနည်း Tutorial\n\n"
+        "• /list ကိုနှိပ်ပြီး ဖိုင်စာရင်းကြည့်ပါ။\n"
+        "• ဖိုင်အမည်ကို Copy ကူးပြီး Bot ထံစာရိုက်ပို့ပါ။\n"
+        "• Bot မှ ဖိုင်ကို အလိုအလျောက် ပို့ပေးပါလိမ့်မည်။\n\n"
+        "👤 Owner: @amcrafter_bot"
     )
     await update.message.reply_text(guide_text)
 
+# Message handler (စာရိုက်ပို့ရင် ဖိုင်ပြန်ပို့ပေးဖို့)
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     joined = await is_user_joined(update, context)
     if not joined:
@@ -76,28 +90,29 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # --- File Database (ဒီနေရာမှာ သင့်ရဲ့ File ID တွေကို ထည့်ပါ) ---
     file_database = {
-        "Actions and Stuff 1.10": "FILE_ID_HERE",
-        "Item Physics & More": "FILE_ID_HERE",
-        "MM Standard UI V1": "FILE_ID_HERE"
+        "Actions and Stuff 1.10": "YOUR_FILE_ID_HERE",
+        "Item Physics & More": "YOUR_FILE_ID_HERE",
+        "MM Standard UI V1": "YOUR_FILE_ID_HERE"
     }
 
     if text in file_database:
         file_id = file_database[text]
-        if file_id == "FILE_ID_HERE":
-            await update.message.reply_text("ဒီဖိုင်အတွက် ID မထည့်ရသေးပါဘူးဗျာ။")
+        if file_id == "YOUR_FILE_ID_HERE":
+            await update.message.reply_text("❌ ဒီဖိုင်အတွက် ID မထည့်ရသေးပါဘူးဗျာ။")
         else:
             try:
                 await update.message.reply_document(document=file_id)
             except Exception as e:
-                await update.message.reply_text(f"Error: {str(e)}")
+                await update.message.reply_text(f"❌ Error: {str(e)}")
     else:
-        await update.message.reply_text("တောင်းပန်ပါတယ်၊ အဲ့ဒီအမည်နဲ့ File မရှိသေးပါဘူး။ /list ကိုနှိပ်ပြီး အမည်ကို ပြန်စစ်ပေးပါ။")
+        await update.message.reply_text("❓ မရှိသောဖိုင်အမည်ဖြစ်နေပါသည်။ /list ကိုနှိပ်ပြီး အမည်ကို ပြန်စစ်ပေးပါ။")
 
+# --- 4. Main Program ---
 def main():
-    # Web server ကို background thread နဲ့ run မယ်
-    threading.Thread(target=run_web_server, daemon=True).start()
+    # Render အတွက် Web Server ကို background thread နဲ့ run မယ်
+    keep_alive()
 
-    # Telegram Bot ကို စမယ်
+    # Telegram Bot ကို စတင်မယ်
     application = Application.builder().token(TOKEN).build()
 
     application.add_handler(CommandHandler("start", start))
@@ -105,7 +120,7 @@ def main():
     application.add_handler(CommandHandler("tutorial", tutorial))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    print("Bot is running...")
+    print("Bot is starting...")
     application.run_polling()
 
 if __name__ == '__main__':

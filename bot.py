@@ -69,7 +69,7 @@ async def list_files(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "5. Naturalist 26.1\n\n"
         "6. RLCraft Bedrock Edition 1.2\n\n"
         "7. Better on Bedrock 1.2.0\n\n"
-        "မိမိလိုချင်တဲ့ File​ အမည်ကို Copy ယူပါ။"
+        "မိမိလိုချင်တဲ့ File​ အမည်ကို Copy ယူပြီးပို့ပေးပါ။"
     )
     await update.message.reply_text(file_list)
 
@@ -98,10 +98,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "MC​ Last Version": "FILE_ID_HERE"
         "Actions and Stuff 1.10": "FILE_ID_HERE",
         "Item Physics & More": "FILE_ID_HERE",
-        "MM Standard UI V1": "FILE_ID_HERE"
-        "RealismCraft 2.4": "FILE_ID_HERE"
-        "Naturalist 26.1": "FILE_ID_HERE"
-        "RealismCraft 2.4": "FILE_ID_HERE"
+        "MM Standard UI V1": "FILE_ID_HERE",
+        "RealismCraft 2.4": "FILE_ID_HERE",
+        "Naturalist 26.1": "FILE_ID_HERE",
+        "RealismCraft 2.4": "FILE_ID_HERE",
         "Better on Bedrock 1.2.0": "FILE_ID_HERE"
     }
 

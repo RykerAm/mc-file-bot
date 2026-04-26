@@ -43,13 +43,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard = [[InlineKeyboardButton("Join ရန်နှိပ်ပါ", url=f"https://t.me/{CHANNEL_ID.replace('@', '')}")]]
         reply_markup = InlineKeyboardMarkup(keyboard)
         await update.message.reply_text(
-            "Channel အရင်​Join ပြီးမှ Bot ကိုအသုံးပြုလို့ရမှာပါဗျ\n\nJoin ပြီးပါက /start ကို ပြန်နှိပ်ပါ။",
+            "Channel အရင် Join ပြီးမှ Bot ကိုအသုံးပြုလို့ရမှာပါဗျ\n\nJoin ပြီးပါက /start ကို ပြန်နှိပ်ပါ။",
             reply_markup=reply_markup
         )
         return
 
     await update.message.reply_text(
-        "Welcome ပါဗျ Advance File Bot ကိုစတင်အသုံးပြုနိုင်ပါပြီ။\n\nရယူနိုင်သော File များစာရင်းကိုကြည့်ရန် /list ကိုနှိပ်ပါ\Advance File Bot အသုံးပြုနည်းကြည့်ရန် /tutorial ကိုနှိပ်ပါ"
+        "Welcome ပါဗျ Advance File Bot ကိုစတင်အသုံးပြုနိုင်ပါပြီ။\n\nရယူနိုင်သော File များစာရင်းကိုကြည့်ရန် /list ကိုနှိပ်ပါ\nAdvance File Bot အသုံးပြုနည်းကြည့်ရန် /tutorial ကိုနှိပ်ပါ"
     )
 
 # /list command
@@ -61,15 +61,15 @@ async def list_files(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     file_list = (
         "ရယူနိုင်သော File များစာရင်း -\n\n"
-        "MC Last Version\n\n"
-        "1. Actions and Stuff 1.10\n"
-        "2. Item Physics & More\n"
-        "3. MM Standard UI V1\n\n"
-        "4. RealismCraft 2.4\n\n"
-        "5. Naturalist 26.1\n\n"
-        "6. RLCraft Bedrock Edition 1.2\n\n"
-        "7. Better on Bedrock 1.2.0\n\n"
-        "မိမိလိုချင်တဲ့ File​ အမည်ကို Copy ယူပြီးပို့ပေးပါ။"
+        "• MC Last Version\n"
+        "• Actions and Stuff 1.10\n"
+        "• Item Physics and More\n"
+        "• MM Standard UI V1\n"
+        "• RealismCraft 2.4\n"
+        "• Naturalist 26.1\n"
+        "• RLCraft Bedrock Edition 1.2\n"
+        "• Better on Bedrock 1.2.0\n\n"
+        "မိမိလိုချင်တဲ့ File အမည်ကို Copy ယူပြီး Bot ထံ စာရိုက်ပို့ပါ။"
     )
     await update.message.reply_text(file_list)
 
@@ -77,7 +77,7 @@ async def list_files(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def tutorial(update: Update, context: ContextTypes.DEFAULT_TYPE):
     guide_text = (
         "Bot အသုံးပြုနည်း Tutorial\n\n"
-        "• /list ထဲက မိမိလိုချင်တဲ့​ File​ အမည်ကို Copy ယူပါ။\n"
+        "• /list ထဲက မိမိလိုချင်တဲ့ File အမည်ကို Copy ယူပါ။\n"
         "• ၎င်းအမည်ကို Bot ထံ စာရိုက်ပို့လိုက်ပါ။\n"
         "• Bot မှ သက်ဆိုင်ရာ File ကို အလိုအလျောက် ပို့ပေးပါလိမ့်မယ်။\n\n"
         "Help Center: @amcrafter_bot"
@@ -93,29 +93,27 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text = update.message.text.strip()
     
-    # --- File Database (ဒီနေရာမှာ သင့် File ID တွေ ထည့်ပါ) ---
+    # --- File Database (IDs များ ဖြည့်သွင်းပြီး) ---
     file_database = {
-        "MC​ Last Version": "FILE_ID_HERE"
-        "Actions and Stuff 1.10": "FILE_ID_HERE",
-        "Item Physics & More": "FILE_ID_HERE",
-        "MM Standard UI V1": "FILE_ID_HERE",
-        "RealismCraft 2.4": "FILE_ID_HERE",
-        "Naturalist 26.1": "FILE_ID_HERE",
-        "RealismCraft 2.4": "FILE_ID_HERE",
-        "Better on Bedrock 1.2.0": "FILE_ID_HERE"
+        "MC Last Version": "BQACAgUAAxkBAAPSae3GrY1WuUPHvKs2AeS1RsuEF10AAjUgAALsw7BWgGJ6b9XdgE47BA",
+        "Actions and Stuff 1.10": "BQACAgUAAxkBAAN8ae2Pno_5SA2Xl5oFYn77DdM3JkIAAmsfAAKy0QFXhA1GvRBwzoc7BA",
+        "Item Physics and More": "BQACAgIAAxkBAAO7ae2z_8HqmEzTBjdyiNPKp9-BI70AAkqgAALlivlKnVlstDtu9UI7BA",
+        "MM Standard UI V1": "BQACAgUAAxkBAAPYae3G6SGZjaLCNg3Cw4Rj7Uwwm28AAhMbAAL9UqBWyz_ru8tLC2s7BA",
+        "RealismCraft 2.4": "BQACAgIAAxkBAAPaae3G9kB6rirexo0X2SXyQGCa7ZMAAnSfAAJx6wABS2Tv1hYxi5zIOwQ",
+        "Naturalist 26.1": "BQACAgIAAxkBAAPcae3HAbvq5mOvstoVbUEx7ea1nGoAAq-ZAAKJ0WBK_HhGojbxuM47BA",
+        "RLCraft Bedrock Edition 1.2": "BQACAgUAAxkBAAPeae3HCxzsNky4UxYfy7flJoNft5IAAqscAAIWHWBX-7mP3C3_sHw7BA",
+        "Better on Bedrock 1.2.0": "BQACAgUAAxkBAAPgae3HF3HwsyhvlPn9fPxi6Bh18CwAArcaAAKtWilWQFXbeAwkmgc7BA"
     }
 
     if text in file_database:
         file_id = file_database[text]
-        if file_id == "FILE_ID_HERE":
-            await update.message.reply_text("ဒီ​ File​ မရှိ့သေးပါဘူးဗျ။")
-        else:
-            try:
-                await update.message.reply_document(document=file_id)
-            except Exception as e:
-                await update.message.reply_text(f"Error: {str(e)}")
+        try:
+            await update.message.reply_document(document=file_id, caption=f"ဒီမှာပါ {text} File ဖြစ်ပါတယ်ဗျ။")
+        except Exception as e:
+            await update.message.reply_text(f"Error: File ပို့ရာတွင် အဆင်မပြေဖြစ်နေပါသည်။ ({str(e)})")
     else:
-        await update.message.reply_text("မရှိသော​ File​ အမည် ဖြစ်နေပါတယ်။ /list ထဲကအတိုင်း တိကျစွာ ရေးပေးပါ။")
+        # File ရှာမတွေ့ရင် /list ပြန်ပြခိုင်းတာ ပိုကောင်းပါတယ်
+        await update.message.reply_text("မရှိသော File အမည် ဖြစ်နေပါတယ်။ /list ထဲကအတိုင်း စာလုံးပေါင်း တိကျစွာ ရေးပေးပါ။")
 
 # --- 4. Main Program ---
 def main():

@@ -80,7 +80,7 @@ async def tutorial(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "• /list ထဲက မိမိလိုချင်တဲ့ File အမည်ကို Copy ယူပါ။\n"
         "• ၎င်းအမည်ကို Bot ထံ စာရိုက်ပို့လိုက်ပါ။\n"
         "• Bot မှ သက်ဆိုင်ရာ File ကို အလိုအလျောက် ပို့ပေးပါလိမ့်မယ်။\n\n"
-        "Help Center: amcrafter_bot"
+        "Help Center: @amcrafter_bot"
     )
     await update.message.reply_text(guide_text)
 

@@ -19,16 +19,20 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not joined:
         keyboard = [[InlineKeyboardButton("Join  ရန်နှိပ်ပါ", url=f"https://t.me/{CHANNEL_ID.replace('@', '')}")]]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await update.message.reply_text("Channel အရင်​Join ပြီးမှ​ Bot ကိုအသုံးပြုလို့ရမှာပါဗျ") 
-
-(Join ပြီးပါက /start ကိုနှိပ်ပေးပါ)", reply_markup=reply_markup)
+        await update.message.reply_text(
+            f"Channel အရင် Join ပြီးမှ Bot ကိုအသုံးပြုလို့ရမှာပါဗျ။\n\n"
+            f"(Join ပြီးပါက /start ကိုပြန်နှိပ်ပေးပါ)",
+            reply_markup=reply_markup
+        )
         return
+
     await update.message.reply_text(
-        "Welcome ပါဗျ
-Bot ကိုစတင်အသုံးပြုနိုင်ပါပြီ။\n\n"
-        "ရယူနိုင်​သော​ File​ များစာရင်းကိုကြည့်ရန် /list ကိုနှိပ်ပါ။\n"
-        "Bot အသုံးပြုနည်းကြည့်ရန် /tutorial ကိုနှိပ်ပါ။\n"
+        f"Welcome ပါဗျ။\n"
+        f"Bot ကိုစတင်အသုံးပြုနိုင်ပါပြီ။\n\n"
+        f"ရယူနိုင်သော File များစာရင်းကိုကြည့်ရန် /list ကိုနှိပ်ပါ။\n"
+        f"Bot အသုံးပြုနည်းကြည့်ရန် /tutorial ကိုနှိပ်ပါ။"
     )
+
 
 async def list_files(update: Update, context: ContextTypes.DEFAULT_TYPE):
     joined = await is_user_joined(update, context)

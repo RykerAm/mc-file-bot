@@ -19,7 +19,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not joined:
         keyboard = [[InlineKeyboardButton("Join  ရန်နှိပ်ပါ", url=f"https://t.me/{CHANNEL_ID.replace('@', '')}")]]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await update.message.reply_text("Channel အရင်​Join ပြီးမှ​ Bot ကိုအသုံးပြုလို့ရမှာပါဗျ
+        await update.message.reply_text("Channel အရင်​Join ပြီးမှ​ Bot ကိုအသုံးပြုလို့ရမှာပါဗျ") 
 
 (Join ပြီးပါက /start ကိုနှိပ်ပေးပါ)", reply_markup=reply_markup)
         return

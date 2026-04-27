@@ -5,7 +5,7 @@ from flask import Flask
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
-# --- 1. Flask Web Server ---
+# --- 1. Flask Web Server (Render နှိုးထားရန်) ---
 app = Flask('')
 
 @app.route('/')
@@ -24,13 +24,11 @@ def keep_alive():
 # --- 2. Bot Settings ---
 TOKEN = '8512047741:AAGpAQ6GGKS8V_8eXBQ9g7U__UYUXUZGpbw'
 CHANNEL_ID = '@MinecraftMyanmarMCM'
-ADMIN_ID = 6112249043  # <--- ဒီနေရာမှာ မင်းရဲ့ Telegram User ID ကို အမှန်ပြင်ထည့်ပါ
+ADMIN_ID = 5110594364  # Admin ID (မင်းရဲ့ ID ဖြစ်ရမယ်)
 
-# User IDs သိမ်းဆည်းရန် ဖိုင်အမည်
 USER_LIST_FILE = "user_ids.txt"
 
 def save_user(user_id):
-    """User ID အသစ်ဖြစ်ပါက ဖိုင်ထဲသိမ်းရန်"""
     try:
         existing_users = get_all_users()
         if str(user_id) not in existing_users:
@@ -40,7 +38,6 @@ def save_user(user_id):
         print(f"Error saving user: {e}")
 
 def get_all_users():
-    """သိမ်းထားသော User IDs အားလုံးကို ပြန်ယူရန်"""
     if not os.path.exists(USER_LIST_FILE):
         return set()
     with open(USER_LIST_FILE, "r") as f:
@@ -58,7 +55,7 @@ async def is_user_joined(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    save_user(user_id) # User ID ကို မှတ်တမ်းတင်မယ်
+    save_user(user_id)
 
     joined = await is_user_joined(update, context)
     if not joined:
@@ -71,7 +68,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     await update.message.reply_text(
-        "Welcome ပါဗျ Advance File Bot ကိုစတင်အသုံးပြုနိုင်ပါပြီ။\n\nรယူနိုင်သော File များစာရင်းကိုကြည့်ရန် /list ကိုနှိပ်ပါ\nAdvance File Bot အသုံးပြုနည်းကြည့်ရန် /tutorial ကိုနှိပ်ပါ"
+        "Welcome ပါဗျ Advance File Bot ကိုစတင်အသုံးပြုနိုင်ပါပြီ။\n\nရယူနိုင်သော File များစာရင်းကိုကြည့်ရန် /list ကိုနှိပ်ပါ\nAdvance File Bot အသုံးပြုနည်းကြည့်ရန် /tutorial ကိုနှိပ်ပါ"
     )
 
 async def list_files(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -104,14 +101,14 @@ async def tutorial(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_text(guide_text)
 
-# --- Broadcast Function (Admin Only) ---
+# --- Broadcast စနစ် ---
 async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
         await update.message.reply_text("❌ ဒီ command ကို Admin သာ အသုံးပြုနိုင်ပါသည်။")
         return
 
     if not context.args:
-        await update.message.reply_text("⚠️ ပို့မည့်စာသားကို ထည့်ရေးပေးပါ။\nဥပမာ - `/broadcast Bot ကို ၁၀ မိနစ်ခန့် ပြင်ဆင်နေပါသည်`", parse_mode='Markdown')
+        await update.message.reply_text("⚠️ ပို့မည့်စာသားကို ထည့်ရေးပေးပါ။\nဥပမာ - `/broadcast Bot ပြင်ဆင်နေပါသည်`", parse_mode='Markdown')
         return
 
     broadcast_msg = " ".join(context.args)
@@ -122,13 +119,14 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     for uid in users:
         try:
-            await context.bot.send_message(chat_id=int(uid), text=f"📢 **သတင်းစကား**\n\n{broadcast_msg}", parse_mode='Markdown')
+            await context.bot.send_message(chat_id=int(uid), text=f"📢 **News**\n\n{broadcast_msg}", parse_mode='Markdown')
             count += 1
-        except Exception as e:
-            print(f"Could not send to {uid}: {e}")
+        except Exception:
+            continue
 
     await status_msg.edit_text(f"✅ အောင်မြင်စွာ ပို့ပြီးပါပြီ။\nပို့ပြီးသူအရေအတွက် - {count} ယောက်")
 
+# --- Message & File Handling စနစ် ---
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     save_user(user_id)
@@ -138,27 +136,35 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await start(update, context)
         return
 
-    text = update.message.text.strip()
-    
-    file_database = {
-        "MC Latest Version": "BQACAgUAAxkBAAPSae3GrY1WuUPHvKs2AeS1RsuEF10AAjUgAALsw7BWgGJ6b9XdgE47BA",
-        "Actions and Stuff 1.10": "BQACAgUAAxkBAAN8ae2Pno_5SA2Xl5oFYn77DdM3JkIAAmsfAAKy0QFXhA1GvRBwzoc7BA",
-        "Item Physics and More": "BQACAgIAAxkBAAO7ae2z_8HqmEzTBjdyiNPKp9-BI70AAkqgAALlivlKnVlstDtu9UI7BA",
-        "MM Standard UI V1": "BQACAgUAAxkBAAPYae3G6SGZjaLCNg3Cw4Rj7Uwwm28AAhMbAAL9UqBWyz_ru8tLC2s7BA",
-        "RealismCraft 2.4": "BQACAgIAAxkBAAPaae3G9kB6rirexo0X2SXyQGCa7ZMAAnSfAAJx6wABS2Tv1hYxi5zIOwQ",
-        "Naturalist 26.1": "BQACAgIAAxkBAAPcae3HAbvq5mOvstoVbUEx7ea1nGoAAq-ZAAKJ0WBK_HhGojbxuM47BA",
-        "RLCraft Bedrock Edition 1.2": "BQACAgUAAxkBAAPeae3HCxzsNky4UxYfy7flJoNft5IAAqscAAIWHWBX-7mP3C3_sHw7BA",
-        "Better on Bedrock 1.2.0": "BQACAgUAAxkBAAPgae3HF3HwsyhvlPn9fPxi6Bh18CwAArcaAAKtWilWQFXbeAwkmgc7BA"
-    }
+    # ၁။ အကယ်၍ User က File (Document) ပို့လာလျှင် File ID ကို ပြန်ပြပေးမည်
+    if update.message.document:
+        f_id = update.message.document.file_id
+        await update.message.reply_text(f"✅ File ID ရပါပြီ -\n\n`{f_id}`", parse_mode='MarkdownV2')
+        return
 
-    if text in file_database:
-        file_id = file_database[text]
-        try:
-            await update.message.reply_document(document=file_id, caption=f"ဒီမှာပါ {text} File ဖြစ်ပါတယ်ဗျ။")
-        except Exception as e:
-            await update.message.reply_text(f"Error: File ပို့ရာတွင် အဆင်မပြေဖြစ်နေပါသည်။ ({str(e)})")
-    else:
-        await update.message.reply_text("မရှိသော File အမည် ဖြစ်နေပါတယ်။ /list ထဲကအတိုင်း စာလုံးပေါင်း တိကျစွာ ရေးပေးပါ။")
+    # ၂။ အကယ်၍ User က စာရိုက်ပို့လျှင် (File Database ထဲ ရှာမည်)
+    if update.message.text:
+        text = update.message.text.strip()
+        
+        file_database = {
+            "MC Latest Version": "BQACAgUAAxkBAAPSae3GrY1WuUPHvKs2AeS1RsuEF10AAjUgAALsw7BWgGJ6b9XdgE47BA",
+            "Actions and Stuff 1.10": "BQACAgUAAxkBAAN8ae2Pno_5SA2Xl5oFYn77DdM3JkIAAmsfAAKy0QFXhA1GvRBwzoc7BA",
+            "Item Physics and More": "BQACAgIAAxkBAAO7ae2z_8HqmEzTBjdyiNPKp9-BI70AAkqgAALlivlKnVlstDtu9UI7BA",
+            "MM Standard UI V1": "BQACAgUAAxkBAAPYae3G6SGZjaLCNg3Cw4Rj7Uwwm28AAhMbAAL9UqBWyz_ru8tLC2s7BA",
+            "RealismCraft 2.4": "BQACAgIAAxkBAAPaae3G9kB6rirexo0X2SXyQGCa7ZMAAnSfAAJx6wABS2Tv1hYxi5zIOwQ",
+            "Naturalist 26.1": "BQACAgIAAxkBAAPcae3HAbvq5mOvstoVbUEx7ea1nGoAAq-ZAAKJ0WBK_HhGojbxuM47BA",
+            "RLCraft Bedrock Edition 1.2": "BQACAgUAAxkBAAPeae3HCxzsNky4UxYfy7flJoNft5IAAqscAAIWHWBX-7mP3C3_sHw7BA",
+            "Better on Bedrock 1.2.0": "BQACAgUAAxkBAAPgae3HF3HwsyhvlPn9fPxi6Bh18CwAArcaAAKtWilWQFXbeAwkmgc7BA"
+        }
+
+        if text in file_database:
+            f_id = file_database[text]
+            try:
+                await update.message.reply_document(document=f_id, caption=f"ဒီမှာပါ {text} File ဖြစ်ပါတယ်ဗျ။")
+            except Exception as e:
+                await update.message.reply_text(f"Error: {str(e)}")
+        else:
+            await update.message.reply_text("မရှိသော File အမည် ဖြစ်နေပါတယ်။ /list ထဲကအတိုင်း စာလုံးပေါင်း တိကျစွာ ရေးပေးပါ။")
 
 # --- 4. Main Program ---
 def main():
@@ -170,7 +176,9 @@ def main():
     application.add_handler(CommandHandler("list", list_files))
     application.add_handler(CommandHandler("tutorial", tutorial))
     application.add_handler(CommandHandler("broadcast", broadcast))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    
+    # စာရော ဖိုင်ရော အကုန်ဖမ်းဖို့ filters.ALL ကို သုံးထားပါတယ်
+    application.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, handle_message))
 
     print("Bot is starting...")
     application.run_polling()

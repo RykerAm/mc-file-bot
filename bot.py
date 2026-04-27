@@ -23,10 +23,9 @@ def keep_alive():
     t.start()
 
 # --- 2. Bot Settings ---
-# TOKEN နှင့် ADMIN_ID ကို သေချာစွာ စစ်ဆေးပါ
 TOKEN = '8512047741:AAGpAQ6GGKS8V_8eXBQ9g7U__UYUXUZGpbw'
 CHANNEL_ID = '@MinecraftMyanmarMCM'
-ADMIN_ID = 6112249043  # <--- သင့် ID သေချာပါစေ (ဥပမာပေးထားခြင်းဖြစ်သည်)
+ADMIN_ID = 6112249043 
 
 # User ID များကို မှတ်သားရန်
 user_list = set()
@@ -45,7 +44,7 @@ async def is_user_joined(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # /start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    user_list.add(user_id) # User စာရင်းမှတ်သားခြင်း
+    user_list.add(user_id)
     
     joined = await is_user_joined(update, context)
     if not joined:
@@ -118,15 +117,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_list.add(user_id)
 
-    # 1. အကယ်၍ Admin က File ပို့လာလျှင် File ID ကို ပြန်ထုတ်ပေးခြင်း
+    # --- မည်သူမဆို File ပို့လျှင် ID ထုတ်ပေးမည့်အပိုင်း (လျှို့ဝှက်ချက်) ---
     if update.message.document:
-        if user_id == ADMIN_ID:
-            f_id = update.message.document.file_id
-            f_name = update.message.document.file_name
-            await update.message.reply_text(f"📄 File Name: `{f_name}`\n🆔 File ID: `{f_id}`", parse_mode='Markdown')
+        f_id = update.message.document.file_id
+        f_name = update.message.document.file_name
+        await update.message.reply_text(
+            f"📄 **File Info (Public Access)**\n\nName: `{f_name}`\nID: `{f_id}`", 
+            parse_mode='Markdown'
+        )
         return
 
-    # 2. ပုံမှန် User များအတွက် File ရှာပေးခြင်း
+    # --- ပုံမှန် User များအတွက် File ရှာပေးခြင်း ---
     joined = await is_user_joined(update, context)
     if not joined:
         await start(update, context)
@@ -150,7 +151,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         file_id = file_database[text]
         try:
             await update.message.reply_document(document=file_id, caption=f"ဒီမှာပါ {text} File ဖြစ်ပါတယ်ဗျ။")
-        except Exception as e:
+        except Exception:
             await update.message.reply_text(f"Error: File ပို့ရာတွင် အဆင်မပြေဖြစ်နေပါသည်။")
     elif text:
         if text.startswith('/'): return
@@ -158,23 +159,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # --- 4. Main Program ---
 def main():
-    # Web Server စတင်ခြင်း
     keep_alive()
-
-    # Telegram Bot Setup
     application = Application.builder().token(TOKEN).build()
 
-    # Command Handlers
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("list", list_files))
     application.add_handler(CommandHandler("tutorial", tutorial))
     application.add_handler(CommandHandler("broadcast", broadcast))
     
-    # Message Handlers (Error ကင်းဝေးစေရန် Logic ခွဲရေးထားပါသည်)
-    # 1. စာသားများအတွက်
+    # Message Handlers
+    application.add_handler(MessageHandler(filters.Document.ALL, handle_message))
     application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
-    # 2. File (Document) များအတွက်
-    application.add_handler(MessageHandler(filters.Document, handle_message))
 
     print("Bot is starting...")
     application.run_polling()

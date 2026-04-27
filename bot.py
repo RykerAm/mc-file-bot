@@ -13,17 +13,21 @@ def home():
     return "Bot is Online and Running!"
 
 def run():
-    # Render ရဲ့ Dynamic Port ကို ဖမ်းယူခြင်း
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
 
 def keep_alive():
     t = Thread(target=run)
+    t.daemon = True
     t.start()
 
 # --- 2. Bot Settings ---
 TOKEN = '8512047741:AAGpAQ6GGKS8V_8eXBQ9g7U__UYUXUZGpbw'
 CHANNEL_ID = '@MinecraftMyanmarMCM'
+ADMIN_ID = 6112249043  # <--- ဒီနေရာမှာ သင့် Telegram ID ကို ပြောင်းထည့်ပါ
+
+# User ID များကို ယာယီသိမ်းဆည်းရန် (Bot Restart ချလျှင် ပျောက်ပါမည်)
+user_list = set()
 
 # --- 3. Bot Logic ---
 
@@ -38,6 +42,9 @@ async def is_user_joined(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # /start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    user_list.add(user_id) # User ID ကို စာရင်းထဲမှတ်သားခြင်း
+    
     joined = await is_user_joined(update, context)
     if not joined:
         keyboard = [[InlineKeyboardButton("Join ရန်နှိပ်ပါ", url=f"https://t.me/{CHANNEL_ID.replace('@', '')}")]]
@@ -84,8 +91,40 @@ async def tutorial(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_text(guide_text)
 
-# စာရိုက်ပို့လျှင် File ပြန်ပို့ပေးမည့်စနစ်
+# Broadcast System (Admin သာ သုံးခွင့်ရှိသည်)
+async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        return
+
+    if not context.args:
+        await update.message.reply_text("စာပို့ရန် format: /broadcast <စာသား>")
+        return
+
+    broadcast_msg = " ".join(context.args)
+    count = 0
+    for uid in list(user_list):
+        try:
+            await context.bot.send_message(chat_id=uid, text=broadcast_msg)
+            count += 1
+        except Exception:
+            continue
+    
+    await update.message.reply_text(f"စုစုပေါင်း User {count} ယောက်ထံ စာပို့အောင်မြင်သည်။")
+
+# စာရိုက်ပို့လျှင် သို့မဟုတ် File ပို့လျှင် ကိုင်တွယ်မည့်စနစ်
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    user_list.add(user_id)
+
+    # 1. အကယ်၍ Admin က File ပို့လာလျှင် File ID ကို ပြန်ထုတ်ပေးခြင်း
+    if update.message.document:
+        if user_id == ADMIN_ID:
+            f_id = update.message.document.file_id
+            f_name = update.message.document.file_name
+            await update.message.reply_text(f"📄 File Name: `{f_name}`\n🆔 File ID: `{f_id}`", parse_mode='Markdown')
+        return
+
+    # 2. ပုံမှန် User များအတွက် File ရှာပေးခြင်း
     joined = await is_user_joined(update, context)
     if not joined:
         await start(update, context)
@@ -93,7 +132,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text = update.message.text.strip()
     
-    # --- File Database (IDs များ ဖြည့်သွင်းပြီး) ---
     file_database = {
         "MC Latest Version": "BQACAgUAAxkBAAPSae3GrY1WuUPHvKs2AeS1RsuEF10AAjUgAALsw7BWgGJ6b9XdgE47BA",
         "Actions and Stuff 1.10": "BQACAgUAAxkBAAN8ae2Pno_5SA2Xl5oFYn77DdM3JkIAAmsfAAKy0QFXhA1GvRBwzoc7BA",
@@ -112,21 +150,21 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception as e:
             await update.message.reply_text(f"Error: File ပို့ရာတွင် အဆင်မပြေဖြစ်နေပါသည်။ ({str(e)})")
     else:
-        # File ရှာမတွေ့ရင် /list ပြန်ပြခိုင်းတာ ပိုကောင်းပါတယ်
+        if text.startswith('/'): return # Command တွေကို ကျော်မယ်
         await update.message.reply_text("မရှိသော File အမည် ဖြစ်နေပါတယ်။ /list ထဲကအတိုင်း စာလုံးပေါင်း တိကျစွာ ရေးပေးပါ။")
 
 # --- 4. Main Program ---
 def main():
-    # Render အတွက် Web Server ကို Background မှာ အရင်ဖွင့်ထားမယ်
     keep_alive()
-
-    # Telegram Bot ကို Setup လုပ်မယ်
     application = Application.builder().token(TOKEN).build()
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("list", list_files))
     application.add_handler(CommandHandler("tutorial", tutorial))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    application.add_handler(CommandHandler("broadcast", broadcast))
+    
+    # Text ရော Document(File) ရော လက်ခံရန်
+    application.add_handler(MessageHandler(filters.TEXT | filters.Document & ~filters.COMMAND, handle_message))
 
     print("Bot is starting...")
     application.run_polling()

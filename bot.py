@@ -164,7 +164,8 @@ def main():
     application.add_handler(CommandHandler("broadcast", broadcast))
     
     # Text ရော Document(File) ရော လက်ခံရန်
-    application.add_handler(MessageHandler(filters.TEXT | filters.Document & ~filters.COMMAND, handle_message))
+    application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
+application.add_handler(MessageHandler(filters.Document, handle_message))
 
     print("Bot is starting...")
     application.run_polling()

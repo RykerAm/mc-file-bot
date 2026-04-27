@@ -5,7 +5,7 @@ from flask import Flask
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
-# --- 1. Flask Web Server (Render အတွက်) ---
+# --- 1. Flask Web Server ---
 app = Flask('')
 
 @app.route('/')
@@ -24,13 +24,12 @@ def keep_alive():
 # --- 2. Bot Settings ---
 TOKEN = '8512047741:AAGpAQ6GGKS8V_8eXBQ9g7U__UYUXUZGpbw'
 CHANNEL_ID = '@MinecraftMyanmarMCM'
-ADMIN_ID = 6112249043 
+ADMIN_ID = 6112249043
 
 user_list = set()
 
 # --- 3. Bot Logic ---
 
-# Channel Join စစ်ဆေးခြင်း
 async def is_user_joined(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     try:
@@ -39,7 +38,6 @@ async def is_user_joined(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception:
         return False
 
-# /start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_list.add(user_id)
@@ -49,16 +47,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard = [[InlineKeyboardButton("Join ရန်နှိပ်ပါ", url=f"https://t.me/{CHANNEL_ID.replace('@', '')}")]]
         reply_markup = InlineKeyboardMarkup(keyboard)
         await update.message.reply_text(
-            "Channel အရင် Join ပြီးမှ Bot ကိုအသုံးပြုလို့ရမှာပါဗျ\n\nJoin ပြီးပါက /start ကို ပြန်နှိပ်ပါ။",
+            "Channel အရင် Join ပြီးမှ Bot ကိုအသုံးပြုလို့ရမှာပါ\n\nJoin ပြီးပါက /start ကို ပြန်နှိပ်ပါ။",
             reply_markup=reply_markup
         )
         return
 
     await update.message.reply_text(
-        "Welcome ပါဗျ Advance File Bot ကိုစတင်အသုံးပြုနိုင်ပါပြီ။\n\n• ရယူနိုင်သော File စာရင်းကိုကြည့်ရန် /list ကိုနှိပ်ပါ\n• အသုံးပြုနည်းကြည့်ရန် /tutorial ကိုနှိပ်ပါ"
+        "Welcome ပါ Advance File Bot ကိုစတင်အသုံးပြုနိုင်ပါပြီ။\n\nရယူနိုင်သော File စာရင်းကိုကြည့်ရန် /list ကိုနှိပ်ပါ\nအသုံးပြုနည်းကြည့်ရန် /tutorial ကိုနှိပ်ပါ"
     )
 
-# /list command
 async def list_files(update: Update, context: ContextTypes.DEFAULT_TYPE):
     joined = await is_user_joined(update, context)
     if not joined:
@@ -79,18 +76,17 @@ async def list_files(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_text(file_list)
 
-# /tutorial command (ပြန်ထည့်ပေးထားသည်)
 async def tutorial(update: Update, context: ContextTypes.DEFAULT_TYPE):
     guide_text = (
-        " **Advance File Bot အသုံးပြုနည်း Tutorial**\n\n"
-        "/list ထဲမှ မိမိလိုချင်သော File အမည်ကို Copy ယူပါ။\n"
-        "၎င်းအမည်ကို Bot ထံ စာရိုက်ပို့လိုက်ပါ။\n"
-        "Bot မှ သက်ဆိုင်ရာ File ကို အလိုအလျောက် ပို့ပေးပါလိမ့်မည်။\n\n"
+        "Bot အသုံးပြုနည်း Tutorial\n\n"
+        "1. /list ထဲမှ မိမိလိုချင်သော File အမည်ကို Copy ယူပါ။\n"
+        "2. ၎င်းအမည်ကို Bot ထံ စာရိုက်ပို့လိုက်ပါ။\n"
+        "3. Bot မှ သက်ဆိုင်ရာ File ကို အလိုအလျောက် ပို့ပေးပါလိမ့်မည်။\n\n"
+        "သင်သည် Bot ထံ File တစ်ခုခု ပို့လိုက်ပါက Bot မှ ၎င်း File ၏ File ID ကို ပြန်လည်ထုတ်ပေးပါလိမ့်မည်။\n\n"
         "Help Center: @amcrafter_bot"
     )
-    await update.message.reply_text(guide_text, parse_mode='Markdown')
+    await update.message.reply_text(guide_text)
 
-# /broadcast command
 async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID: return
     if not context.args:
@@ -105,22 +101,18 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception: continue
     await update.message.reply_text(f"User {count} ယောက်ထံ ပို့ပြီးပါပြီ။")
 
-# Message Handler (File ID နှင့် စာရိုက်ရှာဖွေခြင်း)
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_list.add(user_id)
 
-    # ၁။ File ပို့လျှင် ID ထုတ်ပေးခြင်း (Public)
     if update.message.document:
         f_id = update.message.document.file_id
         f_name = update.message.document.file_name
         await update.message.reply_text(
-            f"📄 **File ID ရရှိပါပြီ**\n\nName: `{f_name}`\nID: `{f_id}`", 
-            parse_mode='Markdown'
+            f"File ID ရရှိပါပြီ\n\nName: {f_name}\nID: {f_id}"
         )
         return
 
-    # ၂။ စာရိုက်ပို့လျှင် Join Check အရင်စစ်
     joined = await is_user_joined(update, context)
     if not joined:
         await start(update, context)
@@ -149,18 +141,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not text.startswith('/'):
             await update.message.reply_text("မရှိသော File အမည်ပါ။ /list ကို ပြန်စစ်ပေးပါ။")
 
-# --- 4. Main Program ---
 def main():
     keep_alive()
     application = Application.builder().token(TOKEN).build()
 
-    # Command Handlers (Tutorial ကို ဤနေရာတွင် သေချာထည့်ထားသည်)
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("list", list_files))
     application.add_handler(CommandHandler("tutorial", tutorial))
     application.add_handler(CommandHandler("broadcast", broadcast))
     
-    # Message Handlers
     application.add_handler(MessageHandler(filters.Document.ALL, handle_message))
     application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
 

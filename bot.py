@@ -13,6 +13,7 @@ def home():
     return "Bot is Online and Running!"
 
 def run():
+    # Render ၏ Dynamic Port ကို ဖမ်းယူခြင်း
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
 
@@ -22,11 +23,12 @@ def keep_alive():
     t.start()
 
 # --- 2. Bot Settings ---
+# TOKEN နှင့် ADMIN_ID ကို သေချာစွာ စစ်ဆေးပါ
 TOKEN = '8512047741:AAGpAQ6GGKS8V_8eXBQ9g7U__UYUXUZGpbw'
 CHANNEL_ID = '@MinecraftMyanmarMCM'
-ADMIN_ID = 6112249043  # <--- ဒီနေရာမှာ သင့် Telegram ID ကို ပြောင်းထည့်ပါ
+ADMIN_ID = 6112249043  # <--- သင့် ID သေချာပါစေ (ဥပမာပေးထားခြင်းဖြစ်သည်)
 
-# User ID များကို ယာယီသိမ်းဆည်းရန် (Bot Restart ချလျှင် ပျောက်ပါမည်)
+# User ID များကို မှတ်သားရန်
 user_list = set()
 
 # --- 3. Bot Logic ---
@@ -43,7 +45,7 @@ async def is_user_joined(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # /start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    user_list.add(user_id) # User ID ကို စာရင်းထဲမှတ်သားခြင်း
+    user_list.add(user_id) # User စာရင်းမှတ်သားခြင်း
     
     joined = await is_user_joined(update, context)
     if not joined:
@@ -130,8 +132,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await start(update, context)
         return
 
-    text = update.message.text.strip()
+    text = update.message.text.strip() if update.message.text else ""
     
+    # File Database
     file_database = {
         "MC Latest Version": "BQACAgUAAxkBAAPSae3GrY1WuUPHvKs2AeS1RsuEF10AAjUgAALsw7BWgGJ6b9XdgE47BA",
         "Actions and Stuff 1.10": "BQACAgUAAxkBAAN8ae2Pno_5SA2Xl5oFYn77DdM3JkIAAmsfAAKy0QFXhA1GvRBwzoc7BA",
@@ -148,24 +151,30 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             await update.message.reply_document(document=file_id, caption=f"ဒီမှာပါ {text} File ဖြစ်ပါတယ်ဗျ။")
         except Exception as e:
-            await update.message.reply_text(f"Error: File ပို့ရာတွင် အဆင်မပြေဖြစ်နေပါသည်။ ({str(e)})")
-    else:
-        if text.startswith('/'): return # Command တွေကို ကျော်မယ်
+            await update.message.reply_text(f"Error: File ပို့ရာတွင် အဆင်မပြေဖြစ်နေပါသည်။")
+    elif text:
+        if text.startswith('/'): return
         await update.message.reply_text("မရှိသော File အမည် ဖြစ်နေပါတယ်။ /list ထဲကအတိုင်း စာလုံးပေါင်း တိကျစွာ ရေးပေးပါ။")
 
 # --- 4. Main Program ---
 def main():
+    # Web Server စတင်ခြင်း
     keep_alive()
+
+    # Telegram Bot Setup
     application = Application.builder().token(TOKEN).build()
 
+    # Command Handlers
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("list", list_files))
     application.add_handler(CommandHandler("tutorial", tutorial))
     application.add_handler(CommandHandler("broadcast", broadcast))
     
-    # Text ရော Document(File) ရော လက်ခံရန်
+    # Message Handlers (Error ကင်းဝေးစေရန် Logic ခွဲရေးထားပါသည်)
+    # 1. စာသားများအတွက်
     application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
-application.add_handler(MessageHandler(filters.Document, handle_message))
+    # 2. File (Document) များအတွက်
+    application.add_handler(MessageHandler(filters.Document, handle_message))
 
     print("Bot is starting...")
     application.run_polling()

@@ -5,7 +5,7 @@ from flask import Flask
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
-# --- 1. Flask Web Server (Render Port Error ကျော်ရန်) ---
+# --- 1. Flask Web Server ---
 app = Flask('')
 
 @app.route('/')
@@ -13,7 +13,6 @@ def home():
     return "Bot is Online and Running!"
 
 def run():
-    # Render ၏ Dynamic Port ကို ဖမ်းယူခြင်း
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
 
@@ -27,12 +26,10 @@ TOKEN = '8512047741:AAGpAQ6GGKS8V_8eXBQ9g7U__UYUXUZGpbw'
 CHANNEL_ID = '@MinecraftMyanmarMCM'
 ADMIN_ID = 6112249043 
 
-# User ID များကို မှတ်သားရန်
 user_list = set()
 
 # --- 3. Bot Logic ---
 
-# Channel Join မ Join စစ်ဆေးခြင်း
 async def is_user_joined(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     try:
@@ -41,7 +38,6 @@ async def is_user_joined(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception:
         return False
 
-# /start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_list.add(user_id)
@@ -57,10 +53,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     await update.message.reply_text(
-        "Welcome ပါဗျ Advance File Bot ကိုစတင်အသုံးပြုနိုင်ပါပြီ။\n\nရယူနိုင်သော File များစာရင်းကိုကြည့်ရန် /list ကိုနှိပ်ပါ\nAdvance File Bot အသုံးပြုနည်းကြည့်ရန် /tutorial ကိုနှိပ်ပါ"
+        "Welcome ပါဗျ Advance File Bot ကိုစတင်အသုံးပြုနိုင်ပါပြီ။\n\nရယူနိုင်သော File များစာရင်းကိုကြည့်ရန် /list ကိုနှိပ်ပါ"
     )
 
-# /list command
 async def list_files(update: Update, context: ContextTypes.DEFAULT_TYPE):
     joined = await is_user_joined(update, context)
     if not joined:
@@ -81,53 +76,38 @@ async def list_files(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_text(file_list)
 
-# /tutorial command
 async def tutorial(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    guide_text = (
-        "Bot အသုံးပြုနည်း Tutorial\n\n"
-        "• /list ထဲက မိမိလိုချင်တဲ့ File အမည်ကို Copy ယူပါ။\n"
-        "• ၎င်းအမည်ကို Bot ထံ စာရိုက်ပို့လိုက်ပါ။\n"
-        "• Bot မှ သက်ဆိုင်ရာ File ကို အလိုအလျောက် ပို့ပေးပါလိမ့်မယ်။\n\n"
-        "Help Center: @amcrafter_bot"
-    )
+    guide_text = "စာရိုက်ပို့စနစ်ဖြစ်ပါတယ်။ /list ထဲကအမည်အတိုင်း ပို့ပေးပါ။"
     await update.message.reply_text(guide_text)
 
-# Broadcast System (Admin သာ သုံးခွင့်ရှိသည်)
 async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != ADMIN_ID:
-        return
-
-    if not context.args:
-        await update.message.reply_text("စာပို့ရန် format: /broadcast <စာသား>")
-        return
-
+    if update.effective_user.id != ADMIN_ID: return
+    if not context.args: return
     broadcast_msg = " ".join(context.args)
     count = 0
     for uid in list(user_list):
         try:
             await context.bot.send_message(chat_id=uid, text=broadcast_msg)
             count += 1
-        except Exception:
-            continue
-    
-    await update.message.reply_text(f"စုစုပေါင်း User {count} ယောက်ထံ စာပို့အောင်မြင်သည်။")
+        except Exception: continue
+    await update.message.reply_text(f"User {count} ယောက်ထံ ပို့ပြီးပါပြီ။")
 
-# စာရိုက်ပို့လျှင် သို့မဟုတ် File ပို့လျှင် ကိုင်တွယ်မည့်စနစ်
+# --- အဓိက ပြင်ဆင်လိုက်သည့်အပိုင်း ---
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_list.add(user_id)
 
-    # --- မည်သူမဆို File ပို့လျှင် ID ထုတ်ပေးမည့်အပိုင်း (လျှို့ဝှက်ချက်) ---
+    # ၁။ အရင်ဆုံး File ဟုတ်မဟုတ် စစ်မယ် (ဘယ်သူမဆို File ပို့ရင် ID တန်းပြန်ပို့ပေးမယ်)
     if update.message.document:
         f_id = update.message.document.file_id
         f_name = update.message.document.file_name
         await update.message.reply_text(
-            f"📄 **File Info (Public Access)**\n\nName: `{f_name}`\nID: `{f_id}`", 
+            f"📄 **File ID ရရှိပါပြီ**\n\nName: `{f_name}`\nID: `{f_id}`", 
             parse_mode='Markdown'
         )
-        return
+        return # File ID ပို့ပြီးရင် အောက်က Join Check တွေ ဆက်မလုပ်တော့ဘူး
 
-    # --- ပုံမှန် User များအတွက် File ရှာပေးခြင်း ---
+    # ၂။ File မဟုတ်လို့ စာသားဖြစ်နေရင် Join Check စစ်မယ်
     joined = await is_user_joined(update, context)
     if not joined:
         await start(update, context)
@@ -135,7 +115,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text = update.message.text.strip() if update.message.text else ""
     
-    # File Database
     file_database = {
         "MC Latest Version": "BQACAgUAAxkBAAPSae3GrY1WuUPHvKs2AeS1RsuEF10AAjUgAALsw7BWgGJ6b9XdgE47BA",
         "Actions and Stuff 1.10": "BQACAgUAAxkBAAN8ae2Pno_5SA2Xl5oFYn77DdM3JkIAAmsfAAKy0QFXhA1GvRBwzoc7BA",
@@ -150,12 +129,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if text in file_database:
         file_id = file_database[text]
         try:
-            await update.message.reply_document(document=file_id, caption=f"ဒီမှာပါ {text} File ဖြစ်ပါတယ်ဗျ။")
+            await update.message.reply_document(document=file_id, caption=f"ဒီမှာပါ {text} File ပါ။")
         except Exception:
-            await update.message.reply_text(f"Error: File ပို့ရာတွင် အဆင်မပြေဖြစ်နေပါသည်။")
+            await update.message.reply_text("Error ဖြစ်သွားပါတယ်။")
     elif text:
-        if text.startswith('/'): return
-        await update.message.reply_text("မရှိသော File အမည် ဖြစ်နေပါတယ်။ /list ထဲကအတိုင်း စာလုံးပေါင်း တိကျစွာ ရေးပေးပါ။")
+        if not text.startswith('/'):
+            await update.message.reply_text("မရှိသော File အမည်ပါ။ /list ကို ပြန်စစ်ပါ။")
 
 # --- 4. Main Program ---
 def main():
@@ -167,7 +146,7 @@ def main():
     application.add_handler(CommandHandler("tutorial", tutorial))
     application.add_handler(CommandHandler("broadcast", broadcast))
     
-    # Message Handlers
+    # Handler Order ကို သေချာအောင် ထားပေးခြင်း
     application.add_handler(MessageHandler(filters.Document.ALL, handle_message))
     application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
 

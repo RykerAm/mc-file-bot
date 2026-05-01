@@ -1,16 +1,25 @@
 import os
 import asyncio
 import random
+import logging
 from threading import Thread
 from flask import Flask
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler
 
-# --- 1. Flask Web Server ---
+# --- 1. Flask Web Server (Render အတွက် အသေချာဆုံးပြင်ထားတာ) ---
 app = Flask('')
+
 @app.route('/')
-def home(): return "Bot is Online!"
-def run(): app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 8080)))
+def home():
+    return "Bot is Running!"
+
+def run():
+    # Render ကပေးတဲ့ PORT ကိုယူမယ်၊ မရှိရင် 8080 ကိုသုံးမယ်
+    port = int(os.environ.get("PORT", 8080))
+    # host ကို 0.0.0.0 ထားမှ Render က မြင်ရမှာပါ
+    app.run(host='0.0.0.0', port=port)
+
 def keep_alive():
     t = Thread(target=run)
     t.daemon = True
@@ -72,7 +81,7 @@ file_database = {
         "One Block (Like Java)": "BQACAgUAAxkBAAIDrWnwwA6XggoU6BKy4eh8Mdvc-j1qAAIMFQACJRAZVLD14wmE1V1bOwQ"
     },
     "MC Version": {
-        "MC 26.​13 (Latest)": "BQACAgUAAxkBAAPSae3GrY1WuUPHvKs2AeS1RsuEF10AAjUgAALsw7BWgGJ6b9XdgE47BA"
+        "MC 1.​26.13 (Latest)": "BQACAgUAAxkBAAPSae3GrY1WuUPHvKs2AeS1RsuEF10AAjUgAALsw7BWgGJ6b9XdgE47BA"
     }
 }
 
@@ -85,7 +94,6 @@ async def is_user_joined(user_id, context: ContextTypes.DEFAULT_TYPE):
     except Exception: return False
 
 async def show_menu(update_or_query, context: ContextTypes.DEFAULT_TYPE, edit=False):
-    # Fix: User ID ကို အသေချာဆုံးနည်းလမ်းနဲ့ ယူခြင်း
     user = update_or_query.effective_user if hasattr(update_or_query, 'effective_user') else update_or_query.from_user
     user_id = user.id
     
@@ -113,11 +121,7 @@ async def show_menu(update_or_query, context: ContextTypes.DEFAULT_TYPE, edit=Fa
         try: await update_or_query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
         except: await update_or_query.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
     else:
-        # Command /list နှိပ်တဲ့အခါ Message တိုက်ရိုက်ပို့မယ်
-        if hasattr(update_or_query, 'message'):
-            await update_or_query.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
-        else:
-            await update_or_query.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
+        await update_or_query.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -142,34 +146,12 @@ async def user_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_text(text, parse_mode='HTML')
 
-async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != OWNER_ID: return
-    text = update.message.text_html.replace('/broadcast ', '')
-    count = 0
-    for uid in list(all_users):
-        try:
-            await context.bot.send_message(chat_id=uid, text=text, parse_mode='HTML')
-            count += 1
-        except: pass
-    await update.message.reply_text(f"✅ User {count} ယောက်ထံ ပို့ပြီးပါပြီ။")
-
-async def gbroadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != OWNER_ID: return
-    text = update.message.text_html.replace('/gbroadcast ', '')
-    count = 0
-    for gid in list(all_groups):
-        try:
-            await context.bot.send_message(chat_id=gid, text=text, parse_mode='HTML')
-            count += 1
-        except: pass
-    await update.message.reply_text(f"✅ Group {count} ခုထံ ပို့ပြီးပါပြီ။")
+# --- 5. Main Handlers ---
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message: return
     user_id = update.effective_user.id
-    if update.effective_chat.type == 'private': all_users.add(user_id)
-    else: all_groups.add(update.effective_chat.id)
-
+    
     if update.message.document and user_id == OWNER_ID:
         await update.message.reply_text(f"File ID: <code>{update.message.document.file_id}</code>", parse_mode='HTML')
         return
@@ -216,17 +198,26 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         kb = [[InlineKeyboardButton("⬅️ Back", callback_data="main_list")]]
         await query.edit_message_text(res, reply_markup=InlineKeyboardMarkup(kb), parse_mode='HTML')
 
+# --- 6. Main Runner ---
+
 def main():
+    # Flask ကို အရင်ဆုံး Start လုပ်မယ်
     keep_alive()
+    
+    # Bot ကို Setup လုပ်မယ်
     app_bot = Application.builder().token(TOKEN).build()
+    
     app_bot.add_handler(CommandHandler("start", start))
-    app_bot.add_handler(CommandHandler("list", show_menu))
+    app_bot.add_handler(CommandHandler("list", lambda u, c: show_menu(u, c, edit=False)))
     app_bot.add_handler(CommandHandler("tutorial", tutorial))
     app_bot.add_handler(CommandHandler("user", user_info))
-    app_bot.add_handler(CommandHandler("broadcast", broadcast))
-    app_bot.add_handler(CommandHandler("gbroadcast", gbroadcast))
     app_bot.add_handler(CallbackQueryHandler(button_handler))
-    app_bot.add_handler(MessageHandler(filters.ALL, handle_message))
+    app_bot.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    app_bot.add_handler(MessageHandler(filters.Document.ALL, handle_message))
+
+    # Bot ကို စ Run ပြီ
+    print("Bot is starting...")
     app_bot.run_polling()
 
-if __name__ == '__main__': main()
+if __name__ == '__main__':
+    main()

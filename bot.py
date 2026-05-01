@@ -97,9 +97,29 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     record_user(u)
     if not await is_user_joined(u.id, context):
         kb = [[InlineKeyboardButton("Join Channel", url=f"https://t.me/{CHANNEL_ID.replace('@','')}")]]
-        await update.message.reply_text("ကျနော်ရဲ့ Channel ကိုအရင် Join ပေးပါဗျ။\n\nJoin​ပြီးပါက /start ကိုပြန်နှိပ်ပေးပါ။", reply_markup=InlineKeyboardMarkup(kb))
+        await update.message.reply_text(
+            "<b>⚠️ အသိပေးချက်</b>\n\nBot ကိုအသုံးပြုရန် MCM Official Channel ကို အရင် Join ပေးဖို့ လိုအပ်ပါတယ်ဗျ။ 👇",
+            reply_markup=InlineKeyboardMarkup(kb),
+            parse_mode='HTML'
+        )
         return
-    await update.message.reply_text("<b>Welcome ပါဗျာ</b>\n\n/list - ဖိုင်များကြည့်ရန်\n/tutorial - အသုံးပြုနည်း", parse_mode='HTML')
+    await update.message.reply_text(
+        "<b>Welcome to MCM 🇲🇲</b>\n\n"
+        "မင်္ဂလာပါ! ကျွန်တော်တို့ရဲ့ <b>Advance File Bot</b> ကနေ ကြိုဆိုပါတယ်။\n\n"
+        "📂 /list - ဖိုင်များကြည့်ရန်\n"
+        "📖 /tutorial - အသုံးပြုနည်းလမ်းညွှန်",
+        parse_mode='HTML'
+    )
+
+async def tutorial(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "<b>📖 Bot အသုံးပြုနည်း လမ်းညွှန်</b>\n\n"
+        "၁။ /list ထဲမှ ဖိုင်အမျိုးအစားကို ရွေးပါ။\n"
+        "၂။ မိမိလိုချင်သော <b>ဖိုင်နာမည်</b> ကို Copy ကူးပါ။\n"
+        "၃။ ဖိုင်နာမည်ကို Bot ဆီသို့ Message ပြန်ပို့ပေးပါ။\n"
+        "၄။ Bot မှ ပေးပို့သောဖိုင်ကို Download ဆွဲနိုင်ပါပြီ။",
+        parse_mode='HTML'
+    )
 
 async def user_list_admin(update: Update, context: ContextTypes.DEFAULT_TYPE, page=0):
     if update.effective_user.id != OWNER_ID: return 
@@ -154,17 +174,17 @@ async def show_menu(update, context, edit=False):
     record_user(u)
     if not await is_user_joined(u.id, context):
         kb = [[InlineKeyboardButton("Join Channel", url=f"https://t.me/{CHANNEL_ID.replace('@','')}")]]
-        text = "MCM Channel ကိုအရင် Join ပေးပါဗျ။"
-        if edit: await update.callback_query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(kb))
-        else: await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(kb))
+        text = "<b>⚠️ အသိပေးချက်</b>\n\nBot ကိုအသုံးပြုရန် MCM Official Channel ကို အရင် Join ပေးဖို့ လိုအပ်ပါတယ်ဗျ။ 👇"
+        if edit: await update.callback_query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(kb), parse_mode='HTML')
+        else: await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(kb), parse_mode='HTML')
         return
     keyboard = [
-        [InlineKeyboardButton("Addons", callback_data="cat_Addons"), InlineKeyboardButton("Texture Pack", callback_data="cat_Texture Pack")],
-        [InlineKeyboardButton("Shader Pack", callback_data="cat_Shader Pack"), InlineKeyboardButton("World/Map", callback_data="cat_World/Map")],
-        [InlineKeyboardButton("MC Version", callback_data="cat_MC Version")],
+        [InlineKeyboardButton("📦 Addons", callback_data="cat_Addons"), InlineKeyboardButton("🎨 Texture Pack", callback_data="cat_Texture Pack")],
+        [InlineKeyboardButton("✨ Shader Pack", callback_data="cat_Shader Pack"), InlineKeyboardButton("🗺️ World/Map", callback_data="cat_World/Map")],
+        [InlineKeyboardButton("🎮 MC Version", callback_data="cat_MC Version")],
         [InlineKeyboardButton("🎲 Random File", callback_data="random_file")]
     ]
-    text = "<b>File Type များ</b>"
+    text = "<b>📂 ဖိုင်အမျိုးအစားများကို ရွေးချယ်ပါ</b>\n\nကိုယ်လိုခြင်တဲ့ Category ခလုတ်ကို နှိပ်ပေးပါဗျ။"
     if edit: await update.callback_query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
     else: await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
 
@@ -220,7 +240,7 @@ def main():
     app_bot = Application.builder().token(TOKEN).build()
     app_bot.add_handler(CommandHandler("start", start))
     app_bot.add_handler(CommandHandler("list", lambda u, c: show_menu(u, c)))
-    app_bot.add_handler(CommandHandler("tutorial", lambda u, c: u.message.reply_text("ဖိုင်နာမည်ကို Copy ကူးပြီး Bot ဆီပို့ပေးပါ။")))
+    app_bot.add_handler(CommandHandler("tutorial", tutorial))
     app_bot.add_handler(CommandHandler("user", user_list_admin))
     app_bot.add_handler(CommandHandler("broadcast", broadcast))
     app_bot.add_handler(CommandHandler("gbroadcast", gbroadcast))

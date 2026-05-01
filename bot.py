@@ -1,23 +1,20 @@
 import os
 import asyncio
 import random
-import logging
 from threading import Thread
 from flask import Flask
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler
 
-# --- 1. Flask Web Server (Render အတွက် အသေချာဆုံးပြင်ထားတာ) ---
+# --- 1. Flask Web Server (Render အတွက်) ---
 app = Flask('')
 
 @app.route('/')
 def home():
-    return "Bot is Running!"
+    return "Bot is Online and Running Smoothly!"
 
 def run():
-    # Render ကပေးတဲ့ PORT ကိုယူမယ်၊ မရှိရင် 8080 ကိုသုံးမယ်
     port = int(os.environ.get("PORT", 8080))
-    # host ကို 0.0.0.0 ထားမှ Render က မြင်ရမှာပါ
     app.run(host='0.0.0.0', port=port)
 
 def keep_alive():
@@ -30,10 +27,7 @@ TOKEN = '8512047741:AAFGZ0dCg8MQ6hoUUBja-6dCchdgHkoIc70'
 OWNER_ID = 6112249043 
 CHANNEL_ID = '@MinecraftMyanmarMCM'
 
-all_users = set()
-all_groups = set()
-
-# --- 3. Database ---
+# --- 3. Database (ဖိုင် ၄၃ ခုလုံး အပြည့်အစုံ) ---
 file_database = {
     "Addons": {
         "Actions and Stuff 1.10": "BQACAgUAAxkBAAN8ae2Pno_5SA2Xl5oFYn77DdM3JkIAAmsfAAKy0QFXhA1GvRBwzoc7BA",
@@ -81,7 +75,7 @@ file_database = {
         "One Block (Like Java)": "BQACAgUAAxkBAAIDrWnwwA6XggoU6BKy4eh8Mdvc-j1qAAIMFQACJRAZVLD14wmE1V1bOwQ"
     },
     "MC Version": {
-        "MC 26.13 (Latest)": "BQACAgUAAxkBAAPSae3GrY1WuUPHvKs2AeS1RsuEF10AAjUgAALsw7BWgGJ6b9XdgE47BA"
+        "MC 1.21.0 (Latest)": "BQACAgUAAxkBAAPSae3GrY1WuUPHvKs2AeS1RsuEF10AAjUgAALsw7BWgGJ6b9XdgE47BA"
     }
 }
 
@@ -91,15 +85,13 @@ async def is_user_joined(user_id, context: ContextTypes.DEFAULT_TYPE):
     try:
         member = await context.bot.get_chat_member(chat_id=CHANNEL_ID, user_id=user_id)
         return member.status in ['member', 'administrator', 'creator']
-    except Exception: return False
+    except: return False
 
 async def show_menu(update_or_query, context: ContextTypes.DEFAULT_TYPE, edit=False):
     user = update_or_query.effective_user if hasattr(update_or_query, 'effective_user') else update_or_query.from_user
     user_id = user.id
     
-    is_joined = await is_user_joined(user_id, context)
-    
-    if not is_joined:
+    if not await is_user_joined(user_id, context):
         text = "ကျနော်ရဲ့ MCM Channel ကိုအရင် Join ပြီးမှ Bot ကိုအသုံးပြုလို့ရမှာပါဗျ။\n\nJoin ပြီးပါက /start ကိုပြန်နှိပ်ပေးပါ"
         kb = [[InlineKeyboardButton("Join Channel", url=f"https://t.me/{CHANNEL_ID.replace('@','')}")]]
         if edit:
@@ -119,45 +111,19 @@ async def show_menu(update_or_query, context: ContextTypes.DEFAULT_TYPE, edit=Fa
     
     if edit:
         try: await update_or_query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
-        except: await update_or_query.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
+        except: pass
     else:
         await update_or_query.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    all_users.add(user_id)
-    if not await is_user_joined(user_id, context):
-        kb = [[InlineKeyboardButton("Join Channel", url=f"https://t.me/{CHANNEL_ID.replace('@','')}")]]
-        await update.message.reply_text("ကျနော်ရဲ့ MCM Channel ကိုအရင် Join ပြီးမှ Bot ကိုအသုံးပြုလို့ရမှာပါဗျ။\n\nJoin ပြီးပါက /start ကိုပြန်နှိပ်ပေးပါ", reply_markup=InlineKeyboardMarkup(kb))
-        return
-    await update.message.reply_text("<b>Welcome ပါဗျာ</b>\n\n<b>Advance File Bot 4.0 ကိုစတင်အသုံးပြုနိုင်ပါပြီ</b>\n\nရယူနိုင်သော File များစရင်းကိုကြည့်ရန် /list ကိုနှိပ်ပေးပါ။\n\nBot အသုံးပြုနည်းကြည့်ရရန် /tutorial ကိုနှိပ်ပေးပါ။", parse_mode='HTML')
-
-async def tutorial(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("<b>Tutorial</b>\n\n၁။ /list ထဲမှာရှိ့တဲ့ကိုယ်လိုခြင်တဲ့ Addon Name တစ်ခုကို Copy လိုက်ပါ\n၂။ Copy လုပ်ထားတဲ့ Addon Name ကိုပို့လိုက်ပါ။\n၃။ Bot က Name နဲ့သက်ဆိုင်ရာ File ကိုပြန်ပို့ပေးပါလိမ့်မယ်\n\n File ကို 10min ပြည့်တာနဲ့ပြန်ဖျက်ပါတယ်", parse_mode='HTML')
-
-async def user_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    u = update.effective_user
-    username = f"@{u.username}" if u.username else "မရှိပါ"
-    text = (
-        "👤 <b>User Profile Information</b>\n\n"
-        f"📝 <b>Name:</b> {u.first_name}\n"
-        f"🔗 <b>Username:</b> {username}\n"
-        f"🆔 <b>User ID:</b> <code>{u.id}</code>\n\n"
-    )
-    await update.message.reply_text(text, parse_mode='HTML')
-
-# --- 5. Main Handlers ---
+    await update.message.reply_text("<b>Welcome ပါဗျာ</b>\n\n<b>Advance File Bot 4.0</b>\n\n/list ကိုနှိပ်ပြီး စတင်အသုံးပြုနိုင်ပါပြီ။", parse_mode='HTML')
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not update.message: return
+    if not update.message or not update.message.text: return
     user_id = update.effective_user.id
     
-    if update.message.document and user_id == OWNER_ID:
-        await update.message.reply_text(f"File ID: <code>{update.message.document.file_id}</code>", parse_mode='HTML')
-        return
-
-    text = update.message.text.strip() if update.message.text else ""
-    if not text or text.startswith('/'): return
+    text = update.message.text.strip()
+    if text.startswith('/'): return
     if not await is_user_joined(user_id, context): return
 
     found = []
@@ -166,12 +132,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if text.lower() in name.lower(): found.append((name, fid))
     
     if not found:
-        await update.message.reply_text("File ရှာမတွေ့ပါ။")
+        await update.message.reply_text("File ရှာမတွေ့ပါ။ နာမည်မှန်အောင်ပြန်ရိုက်ပေးပါ။")
     elif len(found) == 1:
-        msg = await update.message.reply_document(document=found[0][1], caption=f"ဒီမှာပါ <b>{found[0][0]}</b>", parse_mode='HTML')
-        await asyncio.sleep(600)
-        try: await msg.delete()
-        except: pass
+        # User အားနာစရာမလိုအောင် Sleep ဖြုတ်ထားပါတယ်၊ ပိုမြန်သွားပါမယ်
+        await update.message.reply_document(document=found[0][1], caption=f"ဒီမှာပါ <b>{found[0][0]}</b>", parse_mode='HTML')
     else:
         res = "ရှာတွေ့သည့် File များ:\n"
         for f in found: res += f"• <code>{f[0]}</code>\n"
@@ -186,10 +150,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif query.data == "random_file":
         all_f = [(n, f) for c in file_database.values() for n, f in c.items()]
         name, fid = random.choice(all_f)
-        msg = await query.message.reply_document(document=fid, caption=f"Random: <b>{name}</b>", parse_mode='HTML')
-        await asyncio.sleep(600)
-        try: await msg.delete()
-        except: pass
+        await query.message.reply_document(document=fid, caption=f"Random: <b>{name}</b>", parse_mode='HTML')
     elif query.data.startswith("cat_"):
         cat_name = query.data.replace("cat_", "")
         files = file_database.get(cat_name, {})
@@ -198,26 +159,17 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         kb = [[InlineKeyboardButton("⬅️ Back", callback_data="main_list")]]
         await query.edit_message_text(res, reply_markup=InlineKeyboardMarkup(kb), parse_mode='HTML')
 
-# --- 6. Main Runner ---
-
 def main():
-    # Flask ကို အရင်ဆုံး Start လုပ်မယ်
     keep_alive()
-    
-    # Bot ကို Setup လုပ်မယ်
-    app_bot = Application.builder().token(TOKEN).build()
+    # Connection ပိုငြိမ်အောင် timeout ညှိထားပါတယ်
+    app_bot = Application.builder().token(TOKEN).read_timeout(20).write_timeout(20).build()
     
     app_bot.add_handler(CommandHandler("start", start))
     app_bot.add_handler(CommandHandler("list", lambda u, c: show_menu(u, c, edit=False)))
-    app_bot.add_handler(CommandHandler("tutorial", tutorial))
-    app_bot.add_handler(CommandHandler("user", user_info))
     app_bot.add_handler(CallbackQueryHandler(button_handler))
     app_bot.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    app_bot.add_handler(MessageHandler(filters.Document.ALL, handle_message))
+    
+    # Message အဟောင်းတွေကို ကျော်လိုက်ပြီး လက်ရှိ message တွေကိုပဲ အမြန်ပြန်ဖြေပါမယ်
+    app_bot.run_polling(drop_pending_updates=True)
 
-    # Bot ကို စ Run ပြီ
-    print("Bot is starting...")
-    app_bot.run_polling()
-
-if __name__ == '__main__':
-    main()
+if __name__ == '__main__': main()

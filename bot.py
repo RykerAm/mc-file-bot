@@ -104,8 +104,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
     await update.message.reply_text(
-        "<b>Welcome to MCM 🇲🇲</b>\n\n"
-        "မင်္ဂလာပါ! ကျွန်တော်တို့ရဲ့ <b>Advance File Bot</b> ကနေ ကြိုဆိုပါတယ်။\n\n"
+        "<b>Welcome to Advance File Bot</b>\n\n"
+        "မင်္ဂလာပါ! ကျွန်တော်တို့ရဲ့ <b>Advance File Bot 4.0</b> ကနေ ကြိုဆိုပါတယ်။\n\n"
         "📂 /list - ဖိုင်များကြည့်ရန်\n"
         "📖 /tutorial - အသုံးပြုနည်းလမ်းညွှန်",
         parse_mode='HTML'

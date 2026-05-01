@@ -26,7 +26,7 @@ def keep_alive():
     t.start()
 
 # --- 2. Bot Settings ---
-TOKEN = '8512047741:AAGpAQ6GGKS8V_8eXBQ9g7U__UYUXUZGpbw'
+TOKEN = '8512047741:AAFGZ0dCg8MQ6hoUUBja-6dCchdgHkoIc70'
 OWNER_ID = 6112249043 
 CHANNEL_ID = '@MinecraftMyanmarMCM'
 

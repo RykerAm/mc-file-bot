@@ -113,7 +113,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def tutorial(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "<b>📖 Bot အသုံးပြုနည်း လမ်းညွှန်</b>\n\n"
+        "<b>📖 Bot အသုံးပြုနည်းလမ်းညွှန်</b>\n\n"
         "၁။ /list ထဲမှ ဖိုင်အမျိုးအစားကို ရွေးပါ။\n"
         "၂။ မိမိလိုချင်သော <b>ဖိုင်နာမည်</b> ကို Copy ကူးပါ။\n"
         "၃။ ဖိုင်နာမည်ကို Bot ဆီသို့ Message ပြန်ပို့ပေးပါ။\n"

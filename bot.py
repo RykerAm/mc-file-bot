@@ -1,20 +1,20 @@
 import os
 import psycopg2
 import asyncio
+import random
 from threading import Thread
 from flask import Flask
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler
 
-# --- 1. Flask Web Server (For 24/7 Hosting) ---
+# --- 1. Flask Web Server (For Render 24/7 Hosting) ---
 app = Flask('')
 
 @app.route('/')
 def home():
-    return "Advance File V6.3 bot is Online!"
+    return "Advance File V6.3 Bot is Online!"
 
 def run():
-    # Render environment variable port
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
 
@@ -23,14 +23,14 @@ def keep_alive():
     t.daemon = True
     t.start()
 
-# --- 2. Configuration & Database ---
+# --- 2. Configuration & Database Connection ---
 TOKEN = '8512047741:AAFGZ0dCg8MQ6hoUUBja-6dCchdgHkoIc70'
 OWNER_ID = 6112249043 
 CHANNEL_ID = '@MinecraftMyanmarMCM'
 DB_URL = "postgres://postgres:T74KeLnyE_%jkGv@db.orxgpwzxdiyfinzqgkaa.supabase.co:5432/postgres"
 
 def get_db_conn():
-    # Render နှင့် Supabase အတွက် sslmode ပါဝင်သော connection
+    # Render အတွက် sslmode='require' ထည့်သွင်းထားသည်
     return psycopg2.connect(DB_URL, sslmode='require')
 
 def init_db():
@@ -44,7 +44,7 @@ def init_db():
     cur.close()
     conn.close()
 
-# --- 3. Middlewares & Checks ---
+# --- 3. Middlewares & Auth ---
 async def check_auth(u_id, context):
     conn = get_db_conn(); cur = conn.cursor()
     cur.execute("SELECT 1 FROM blacklist WHERE user_id = %s", (u_id,))
@@ -54,8 +54,7 @@ async def check_auth(u_id, context):
     try:
         m = await context.bot.get_chat_member(CHANNEL_ID, u_id)
         return m.status in ['member', 'administrator', 'creator']
-    except:
-        return False
+    except: return False
 
 # --- 4. User Commands ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -73,16 +72,12 @@ async def list_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     kb = [
         [InlineKeyboardButton("📦 Addons", callback_data="cat_Addons"), InlineKeyboardButton("🎨 Texture Pack", callback_data="cat_Texture Pack")],
         [InlineKeyboardButton("✨ Shader Pack", callback_data="cat_Shader Pack"), InlineKeyboardButton("🗺️ World/Map", callback_data="cat_World/Map")],
-        [InlineKeyboardButton("🎮 MC Version", callback_data="cat_MC Version")]
+        [InlineKeyboardButton("🎮 MC Version", callback_data="cat_MC Version")],
+        [InlineKeyboardButton("🎲 Random File", callback_data="random_file")]
     ]
-    msg = "<b>📂 ဖိုင်အမျိုးအစားများကို ရွေးချယ်ပါ</b>"
-    if update.callback_query:
-        await update.callback_query.edit_message_text(msg, reply_markup=InlineKeyboardMarkup(kb), parse_mode='HTML')
-    else:
-        await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(kb), parse_mode='HTML')
-
-async def tutorial(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("<b>Tutorial</b>\n\n၁။ /list ထဲမှာရှိ့တဲ့ကိုယ်လိုခြင်တဲ့ Addon Name တစ်ခုကို Copy လိုက်ပါ\n၂။ Copy လုပ်ထားတဲ့ Addon Name ကိုပို့လိုက်ပါ။\n၃။ Bot က Name နဲ့သက်ဆိုင်ရာ File ကိုပြန်ပို့ပေးပါလိမ့်မယ်\n\nGroup ထဲတွင်သုံးပါက <code>/give [ဖိုင်နာမည်]</code> ဟု ရိုက်ပေးပါ။\n\n/req Owner ဆီကဖိုင်းတောင်းဆိုတာ /fb က Feedback ပို့တာ", parse_mode='HTML')
+    txt = "<b>📂 ဖိုင်အမျိုးအစားများကို ရွေးချယ်ပါ</b>"
+    if update.callback_query: await update.callback_query.edit_message_text(txt, reply_markup=InlineKeyboardMarkup(kb), parse_mode='HTML')
+    else: await update.message.reply_text(txt, reply_markup=InlineKeyboardMarkup(kb), parse_mode='HTML')
 
 async def fb_req(update: Update, context: ContextTypes.DEFAULT_TYPE):
     u = update.effective_user
@@ -100,7 +95,7 @@ async def fb_req(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def add_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != OWNER_ID: return
     if not update.message.document:
-        await update.message.reply_text("❌ ဖိုင်နှင့်တွဲ၍ Caption တွင် <code>/add Category Name</code> ဟု ရိုက်ပို့ပါ။", parse_mode='HTML')
+        await update.message.reply_text("❌ ဖိုင်နှင့်တွဲ၍ Caption တွင် <code>/add [Category] [Name]</code> ဟု ရိုက်ပို့ပါ။", parse_mode='HTML')
         return
     try:
         cat, name = context.args[0], " ".join(context.args[1:])
@@ -108,56 +103,19 @@ async def add_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         cur.execute("INSERT INTO new_files (category, file_name, file_id) VALUES (%s, %s, %s)", (cat, name, update.message.document.file_id))
         conn.commit(); cur.close(); conn.close()
         await update.message.reply_text(f"✅ သိမ်းဆည်းပြီးပါပြီ - {name}")
-    except:
-        await update.message.reply_text("❌ ပုံစံမှားနေပါသည်။")
-
-async def remove_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != OWNER_ID: return
-    name = " ".join(context.args)
-    conn = get_db_conn(); cur = conn.cursor()
-    cur.execute("DELETE FROM new_files WHERE file_name = %s", (name,))
-    conn.commit(); cur.close(); conn.close()
-    await update.message.reply_text(f"🗑️ ဖျက်ပြီးပါပြီ - {name}")
-
-async def user_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != OWNER_ID: return
-    q = update.callback_query
-    p = int(q.data.split("_")[1]) if q and q.data.startswith("ul_") else 0
-    conn = get_db_conn(); cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) FROM users")
-    total = cur.fetchone()[0]
-    cur.execute("SELECT name, username, user_id FROM users LIMIT 20 OFFSET %s", (p*20,))
-    users = cur.fetchall()
-    cur.close(); conn.close()
-    txt = f"👤 <b>Total Users: {total}</b>\n\n"
-    for i, u in enumerate(users, p*20+1):
-        txt += f"{i}. {u[0]} ({u[1]}) - <code>{u[2]}</code>\n"
-    btns = []
-    if p > 0: btns.append(InlineKeyboardButton("⬅️ Back", callback_data=f"ul_{p-1}"))
-    if (p+1)*20 < total: btns.append(InlineKeyboardButton("Next ➡️", callback_data=f"ul_{p+1}"))
-    kb = InlineKeyboardMarkup([btns]) if btns else None
-    if q:
-        await q.edit_message_text(txt, reply_markup=kb, parse_mode='HTML')
-    else:
-        await update.message.reply_text(txt, reply_markup=kb, parse_mode='HTML')
+    except: await update.message.reply_text("❌ ပုံစံမှားနေပါသည်။ Category နေရာမှာ တစ်လုံးတည်းရှိရပါမယ်။")
 
 async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != OWNER_ID: return
     txt = update.message.text_html.split(None, 1)[1] if len(context.args) > 0 else None
     if not txt: return
-    is_group = "gbroadcast" in update.message.text
     conn = get_db_conn(); cur = conn.cursor()
-    if is_group: cur.execute("SELECT group_id FROM groups")
-    else: cur.execute("SELECT user_id FROM users")
-    targets = cur.fetchall()
-    cur.close(); conn.close()
+    cur.execute("SELECT user_id FROM users"); targets = cur.fetchall(); cur.close(); conn.close()
     count = 0
     for (tid,) in targets:
-        try:
-            await context.bot.send_message(tid, txt, parse_mode='HTML')
-            count += 1
+        try: await context.bot.send_message(tid, txt, parse_mode='HTML'); count += 1
         except: pass
-    await update.message.reply_text(f"✅ {'Groups' if is_group else 'Users'} {count} ဦးထံ ပို့ဆောင်ပြီး။")
+    await update.message.reply_text(f"✅ Users {count} ဦးထံ ပို့ဆောင်ပြီး။")
 
 async def sms_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != OWNER_ID: return
@@ -168,14 +126,12 @@ async def sms_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if target.isdigit(): uid = int(target)
         else:
             cur.execute("SELECT user_id FROM users WHERE username ILIKE %s", (f"@{target}",))
-            res = cur.fetchone()
-            uid = res[0] if res else None
+            res = cur.fetchone(); uid = res[0] if res else None
         cur.close(); conn.close()
         if uid:
             await context.bot.send_message(uid, f"📩 <b>Owner ဆီမှ စာပြန်လာပါသည်:</b>\n\n{msg}", parse_mode='HTML')
             await update.message.reply_text("✅ ပို့ပြီး။")
-    except:
-        await update.message.reply_text("❌ ပုံစံမှားနေပါသည်။")
+    except: await update.message.reply_text("❌ ပုံစံမှားနေပါသည်။")
 
 async def ban_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != OWNER_ID: return
@@ -187,44 +143,46 @@ async def ban_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"🚫 User {uid} ကို Ban လိုက်ပါပြီ။")
     except: pass
 
-# --- 6. Handlers ---
-async def give_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    name = " ".join(context.args)
-    if not name: return
-    found = []
-    # (file_database Logic ဒီမှာပါဝင်ပါတယ် - နေရာလွတ်သက်သာစေရန် အကျဉ်းချုပ်ထားခြင်းဖြစ်သည်)
-    conn = get_db_conn(); cur = conn.cursor()
-    cur.execute("SELECT file_name, file_id FROM new_files WHERE file_name ILIKE %s", (f"%{name}%",))
-    dbf = cur.fetchall(); cur.close(); conn.close()
-    for r in dbf: found.append((r[0], r[1]))
-    if found: await update.message.reply_document(found[0][1], caption=found[0][0])
-
+# --- 6. Message & Button Handlers ---
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type != 'private':
-        conn = get_db_conn(); cur = conn.cursor()
-        cur.execute("INSERT INTO groups (group_id) VALUES (%s) ON CONFLICT DO NOTHING", (update.effective_chat.id,))
-        conn.commit(); cur.close(); conn.close()
-        return
-    u = update.effective_user
-    if not await check_auth(u.id, context): return
-    txt = update.message.text
-    if txt and not txt.startswith('/'):
-        conn = get_db_conn(); cur = conn.cursor()
-        cur.execute("SELECT file_name, file_id FROM new_files WHERE file_name ILIKE %s", (f"%{txt}%",))
-        dbf = cur.fetchall(); cur.close(); conn.close()
-        if dbf: await update.message.reply_document(dbf[0][1], caption=dbf[0][0])
+    if not update.message or not update.message.text: return
+    u_id = update.effective_user.id
+    if not await check_auth(u_id, context): return
+    
+    txt = update.message.text.strip()
+    if txt.startswith('/'): return
+    
+    conn = get_db_conn(); cur = conn.cursor()
+    cur.execute("SELECT file_name, file_id FROM new_files WHERE file_name ILIKE %s", (f"%{txt}%",))
+    dbf = cur.fetchall(); cur.close(); conn.close()
+    
+    if dbf:
+        # ပထမဆုံးတွေ့တဲ့ဖိုင်ကို ပို့ပေးမည်
+        msg = await update.message.reply_document(dbf[0][1], caption=f"ဒီမှာပါ: <b>{dbf[0][0]}</b>", parse_mode='HTML')
+        await asyncio.sleep(600); # 10 min
+        try: await msg.delete()
+        except: pass
+    else:
+        await update.message.reply_text("❌ ရှာမတွေ့ပါဗျာ။")
 
 async def btn_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query; await q.answer()
-    if q.data.startswith("ul_"): await user_list(update, context)
-    elif q.data == "main": await list_menu(update, context)
+    if q.data == "main_list": await list_menu(update, context)
+    elif q.data == "random_file":
+        conn = get_db_conn(); cur = conn.cursor()
+        cur.execute("SELECT file_name, file_id FROM new_files ORDER BY RANDOM() LIMIT 1")
+        res = cur.fetchone(); cur.close(); conn.close()
+        if res:
+            doc = await q.message.reply_document(res[1], caption=f"🎲 Random: <b>{res[0]}</b>", parse_mode='HTML')
+            await asyncio.sleep(600); await doc.delete()
     elif q.data.startswith("cat_"):
-        cn = q.data.replace("cat_", ""); res = f"<b>📂 {cn}</b>\n\n"
+        cn = q.data.replace("cat_", "")
         conn = get_db_conn(); cur = conn.cursor()
         cur.execute("SELECT file_name FROM new_files WHERE category = %s", (cn,))
         dbf = cur.fetchall(); cur.close(); conn.close()
-        for r in dbf: res += f"• <code>{r[0]}</code>\n"
-        await q.edit_message_text(res, reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Back", callback_data="main")]]), parse_mode='HTML')
+        txt = f"<b>📂 {cn} List:</b>\n\n"
+        for r in dbf: txt += f"• <code>{r[0]}</code>\n"
+        await q.edit_message_text(txt, reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Back", callback_data="main_list")]]), parse_mode='HTML')
 
 # --- 7. Runner ---
 def main():
@@ -232,17 +190,12 @@ def main():
     bot = Application.builder().token(TOKEN).build()
     bot.add_handler(CommandHandler("start", start))
     bot.add_handler(CommandHandler("list", list_menu))
-    bot.add_handler(CommandHandler("tutorial", tutorial))
     bot.add_handler(CommandHandler("fb", fb_req))
     bot.add_handler(CommandHandler("req", fb_req))
     bot.add_handler(CommandHandler("add", add_file))
-    bot.add_handler(CommandHandler("remove", remove_file))
-    bot.add_handler(CommandHandler("user", user_list))
     bot.add_handler(CommandHandler("broadcast", broadcast))
-    bot.add_handler(CommandHandler("gbroadcast", broadcast))
     bot.add_handler(CommandHandler("Sms", sms_user))
     bot.add_handler(CommandHandler("ban", ban_user))
-    bot.add_handler(CommandHandler("give", give_cmd))
     bot.add_handler(CallbackQueryHandler(btn_callback))
     bot.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     bot.run_polling()

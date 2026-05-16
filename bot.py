@@ -158,7 +158,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type != 'private' and update.effective_chat.id not in data["groups"]:
         data["groups"].append(update.effective_chat.id)
     save_data(data)
-    await update.message.reply_text(f"👋 {user.first_name}!\nဖိုင်ရှာရန် နာမည်ရိုက်ပို့ပါ။\nGroup ထဲတွင် `/give [File Name]` ဟုရိုက်ပါ။")
+    await update.message.reply_text(f"Welcome ပါ{user.first_name}!\n<b>Advance File Bot ကိုစတင်အသုံးပြုနိုင်ပါပြီ</b>\n\nရယူနိုင်သော File များစရင်းကိုကြည့်ရန် /list ကိုနှိပ်ပေးပါ။\n\nBot အသုံးပြုနည်းကြည့်ရရန် /tutorial ကိုနှိပ်ပေးပါ။")
 
 async def give_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == 'private': return

@@ -69,10 +69,12 @@ async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = load_data(); u_ids = list(data["users"].keys())
     page = 0
     current_u = u_ids[page*30:(page+1)*30]
-    txt = f"📊 **Stats**\n👥 Users: {len(u_ids)}\n📂 Files: {len(data['files'])}\n\n**User List (Page 1):**\n"
-    for uid in current_u: txt += f"- {data['users'][uid]} (`{uid}`)\n"
+    # HTML သုံးလိုက်လို့ Username ထဲက _ တွေ လုံးဝ မပျောက်တော့ပါဘူး
+    txt = f"📊 <b>Stats</b>\n👥 Users: {len(u_ids)}\n📂 Files: {len(data['files'])}\n\n<b>User List (Page 1):</b>\n"
+    for uid in current_u: 
+        txt += f"- {data['users'][uid]} (<code>{uid}</code>)\n"
     kb = [[InlineKeyboardButton("Next ➡️", callback_data=f"sp_{page+1}")]] if len(u_ids) > 30 else []
-    await update.message.reply_text(txt, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(kb))
+    await update.message.reply_text(txt, parse_mode='HTML', reply_markup=InlineKeyboardMarkup(kb))
 
 async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != OWNER_ID: return
@@ -114,40 +116,41 @@ async def sms(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # --- User & Search Logic ---
 
 async def tutorial(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    txt = """📖 **Advance File Bot အသုံးပြုနည်း tutorial**
+    txt = """Advance File Bot အသုံးပြုနည်း tutorial
 
-ဒီ Bot ကို အသုံးပြုပြီး Minecraft Bedrock Addon ဖိုင်တွေကို လွယ်လွယ်ကူကူ ရှာဖွေရယူနိုင်ပါတယ်ဗျ။
+ဒီ Bot ကို အသုံးပြုပြီး Minecraft Bedrock Addon File တွေကို လွယ်လွယ်ကူကူ ရှာဖွေရယူနိုင်ပါတယ်ဗျ။
 
 ---
 
-### ⚙️ **၁။ Bot ထဲမှာ တိုက်ရိုက်ရှာနည်း (Private Chat)**
+၁။ Bot ထဲမှာ တိုက်ရိုက်ရှာနည်း
 
-1️⃣ **ဖိုင်တိုက်ရိုက်ရှာရန်:** Bot ရဲ့ Chat ထဲမှာ ဖိုင်နာမည်ကို ရိုက်ပို့လိုက်ရုံပါပဲ။
-   _💡 ဥပမာ- `One Piece Mod` သို့မဟုတ် `one piece`_
+1️⃣ File ကိုတိုက်ရိုက်ရှာရန်
+ Bot ရဲ့ Chat ထဲမှာ ဖိုင်နာမည်ကို ရိုက်ပို့လိုက်ရုံပါပဲ။
+ ဥပမာ- `One Piece Addon` သို့မဟုတ် `one piece`
    
-2️⃣ **အမျိုးအစားအလိုက်ကြည့်ရန်:**
-   `/list` Command ကို နှိပ်ပြီး Addon, Texture စတဲ့ ခလုတ်တွေထဲကနေ စနစ်တကျ ဝင်ရောက်ကြည့်ရှုနိုင်ပါတယ်။
+2️⃣အမျိုးအစားအလိုက်ကြည့်ရန်:
+   `/list` Command ကို နှိပ်ပြီး Addon, Texture စတဲ့ ခလုတ်တွေထဲကနေဝင်ရောက်ကြည့်ရှုနိုင်ပါတယ်။
 
 ---
 
-### 💬 **၂။ Group (ဂရု) ထဲမှာ ရှာဖွေနည်း (Group Only)**
+၂။ Group ထဲမှာ File တောင်းနည်း (Group Only)
 
 Group ထဲမှာဆိုရင် စာတွေအများကြီး ရိုက်နေကြတာမို့ Bot က အလိုအလျောက် မရှာပေးပါဘူး။ `/give` command ကို သုံးပြီး ရှာရပါမယ်။
 
-👉 **အသုံးပြုပုံ:** `/give [ဖိုင်နာမည်]`
-_💡 ဥပမာ- `/give Naruto Addon`_
+အသုံးပြုပုံ: `/give [ဖိုင်နာမည်]`
+ဥပမာ- `/give Naruto Addon`_
 
 ---
 
-### 📢 **၃။ ဖိုင်တောင်းရန်နှင့် Error အကြောင်းကြားရန်**
+၃။ Bot ဆီမှာ မတင်ရသေးသော file တင်ခိုင်းရန် and Feedback
 
-* **ဖိုင်တောင်းရန်:** `/req [ဖိုင်နာမည်]`
-  _ဥပမာ- `/req Jenny Mod တင်ပေးပါ`_
+Bot ဆီမှာမရှိ့သေးတဲ့ file တင်ခိုင်းရန် `/req [ဖိုင်နာမည်]`
+  _ဥပမာ- `/req Fps boost တင်ပေးပါ`_
   
-* **Error တက်ကြောင်း ပြောရန်:** `/fb [စာသား]`
-  _ဥပမာ- `/fb bot က ဖိုင်ရှာမတွေ့ဘူး ဖြစ်နေတယ်`_
+FeedBack ပြောရန်: /fb [စာသား]`
+  _ဥပမာ- `/fb bot က ဖိုင်ရှာမပေးဘူး ဖြစ်နေတယ်`_
 
-⚠️ **သတိပြုရန်:** ဖိုင်များ ရယူနိုင်ရန်အတွက် @MinecraftMyanmarMCM Channel ကို မဖြစ်မနေ Join ထားရပါမယ်ဗျာ။"""
+သတိပြုရန်: File များ ရယူနိုင်ရန်အတွက် @MinecraftMyanmarMCM Channel ကို မဖြစ်မနေ Join ထားရပါမယ်ဗျာ။"""
 
     await update.message.reply_text(txt, parse_mode='Markdown')
 
@@ -158,7 +161,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type != 'private' and update.effective_chat.id not in data["groups"]:
         data["groups"].append(update.effective_chat.id)
     save_data(data)
-    await update.message.reply_text(f"Welcome ပါ{user.first_name}!\n<b>Advance File Bot ကိုစတင်အသုံးပြုနိုင်ပါပြီ</b>\n\nရယူနိုင်သော File များစရင်းကိုကြည့်ရန် /list ကိုနှိပ်ပေးပါ။\n\nBot အသုံးပြုနည်းကြည့်ရရန် /tutorial ကိုနှိပ်ပေးပါ။")
+    
+    if not await check_auth(user.id, context):
+        return await update.message.reply_text(f"ကျနော်ရဲ့ MCM Channel ကိုအရင် Join ပြီးမှ Bot ကိုအသုံးပြုလို့ရမှာပါဗျ။\n\nJoin ပြီးပါက /start ကိုပြန်နှိပ်ပေးပါ {PUBLIC_CHANNEL}")
+        
+    await update.message.reply_text(f" Welcome ပါ {user.first_name}!\n\nAdvance File Bot ကိုစတင်အသုံးပြုနိုင်ပါပြီ\n\nရယူနိုင်သော File များစရင်းကိုကြည့်ရန် /list ကိုနှိပ်ပေးပါ။\n\nBot အသုံးပြုနည်းကြည့်ရရန် /tutorial ကိုနှိပ်ပေးပါ။")
 
 async def give_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type == 'private': return
@@ -168,8 +175,10 @@ async def give_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = load_data()
     found = [f for f in data["files"] if query in f["name"].lower()]
     for f in found:
-        try: await context.bot.copy_message(update.effective_chat.id, CHANNEL_ID, int(f["msg_id"]), caption=f"ဒီမှာပါ: {f['name']}")
-        except: await context.bot.send_document(update.effective_chat.id, f["msg_id"], caption=f"ဒီမှာပါ: {f['name']}")
+        try:
+            await context.bot.copy_message(chat_id=update.effective_chat.id, from_chat_id=CHANNEL_ID, message_id=int(f["msg_id"]), caption=f"ဒီမှာပါ: {f['name']}")
+        except:
+            pass
 
 async def list_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = load_data()
@@ -184,14 +193,15 @@ async def btn_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if q.data.startswith("sp_"):
         page = int(q.data.split("_")[1]); u_ids = list(data["users"].keys())
         current = u_ids[page*30:(page+1)*30]
-        txt = f"📊 **User List (Page {page+1}):**\n"
-        for uid in current: txt += f"- {data['users'][uid]} (`{uid}`)\n"
+        txt = f"📊 <b>User List (Page {page+1}):</b>\n"
+        for uid in current: 
+            txt += f"- {data['users'][uid]} (<code>{uid}</code>)\n"
         kb = []
         nav = []
         if page > 0: nav.append(InlineKeyboardButton("⬅️ Back", callback_data=f"sp_{page-1}"))
         if (page+1)*30 < len(u_ids): nav.append(InlineKeyboardButton("Next ➡️", callback_data=f"sp_{page+1}"))
         if nav: kb.append(nav)
-        await q.edit_message_text(txt, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(kb))
+        await q.edit_message_text(txt, parse_mode='HTML', reply_markup=InlineKeyboardMarkup(kb))
     elif q.data.startswith("cat_"):
         cat = q.data.replace("cat_", "")
         files = [f for f in data["files"] if f["cat"] == cat]
@@ -204,12 +214,15 @@ async def search_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type != 'private' or not update.message.text: return
     query = update.message.text.lower()
     if not await check_auth(update.effective_user.id, context):
-        return await update.message.reply_text(f"အရင် Join ပါ - {PUBLIC_CHANNEL}")
+        return await update.message.reply_text(f"ကျနော်ရဲ့ MCM Channel ကိုအရင် Join ပြီးမှ Bot ကိုအသုံးပြုလို့ရမှာပါဗျ။\n\nJoin ပြီးပါက /start ကိုပြန်နှိပ်ပေးပါ {PUBLIC_CHANNEL}")
     data = load_data()
     found = [f for f in data["files"] if query in f["name"].lower() or f["name"].lower() in query]
     for f in found:
-        try: await context.bot.copy_message(update.effective_chat.id, CHANNEL_ID, int(f["msg_id"]), caption=f"ဒီမှာပါ: {f['name']}")
-        except: await context.bot.send_document(update.effective_chat.id, f["msg_id"], caption=f"ဒီမှာပါ: {f['name']}")
+        try:
+            # 📂 ဒီနေရာမှာ Channel ထဲက Message ကို စနစ်တကျ Copy ကူးပြီး ပို့ပေးအောင် ပြင်ဆင်လိုက်ပါပြီ
+            await context.bot.copy_message(chat_id=update.effective_chat.id, from_chat_id=CHANNEL_ID, message_id=int(f["msg_id"]), caption=f"ဒီမှာပါ: {f['name']}")
+        except:
+            pass
 
 async def get_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != OWNER_ID: return
